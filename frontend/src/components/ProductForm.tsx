@@ -11,12 +11,14 @@ type ProductFormProps = {
 export function ProductForm({ product, onCancel, onSaved }: ProductFormProps) {
   const [name, setName] = useState(product?.name ?? "");
   const [price, setPrice] = useState(product?.price ?? "");
+  const [stockCount, setStockCount] = useState(String(product?.stockCount ?? 0));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     setName(product?.name ?? "");
     setPrice(product?.price ?? "");
+    setStockCount(String(product?.stockCount ?? 0));
     setError("");
   }, [product]);
 
@@ -29,7 +31,7 @@ export function ProductForm({ product, onCancel, onSaved }: ProductFormProps) {
       const path = product ? `/products/${product.id}` : "/products";
       await request<Product>(path, {
         method: product ? "PUT" : "POST",
-        body: JSON.stringify({ name: name.trim(), price }),
+        body: JSON.stringify({ name: name.trim(), price, stockCount: Number(stockCount) }),
       });
       onSaved();
     } catch (caught: unknown) {
@@ -49,6 +51,7 @@ export function ProductForm({ product, onCancel, onSaved }: ProductFormProps) {
       <form className="field-grid" onSubmit={save}>
         <label className="field"><span>Name</span><input value={name} maxLength={120} onChange={(event) => setName(event.target.value)} required /></label>
         <label className="field"><span>Price (LKR)</span><input type="number" min="0" step="0.01" value={price} onChange={(event) => setPrice(event.target.value)} required /></label>
+        <label className="field"><span>Opening stock count</span><input type="number" min="0" step="1" value={stockCount} onChange={(event) => setStockCount(event.target.value)} required /></label>
         <div className="form-actions"><button className="button button--primary" type="submit" disabled={saving}>{saving ? "Saving…" : "Save product"}</button></div>
       </form>
     </section>

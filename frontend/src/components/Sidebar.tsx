@@ -1,4 +1,5 @@
 import type { ViewName } from "../types";
+import { NavIcon } from "./NavIcon";
 
 type SidebarProps = {
   activeView: ViewName;
@@ -10,6 +11,7 @@ type SidebarProps = {
 };
 
 const navigation: Array<{ label: string; view: ViewName; accent?: "lilac" }> = [
+  { label: "Inventory", view: "inventory" },
   { label: "Products", view: "products" },
   { label: "Invoices", view: "invoices" },
   { label: "Payments", view: "payments" },
@@ -27,10 +29,10 @@ export function Sidebar({ activeView, username, mobileOpen = false, onClose, onL
       aria-hidden={onClose ? !mobileOpen : undefined}
     >
       <div className="sidebar__brand">
-        <span className="brand-mark" aria-hidden="true">M</span>
+        <span className="brand-mark" aria-hidden="true">S</span>
         <div>
-          <strong>Mini ERP</strong>
-          <span>Business workspace</span>
+          <strong>SiyothSoft</strong>
+          <span>ERP workspace</span>
         </div>
         {onClose && (
           <button className="icon-button sidebar__close" type="button" onClick={onClose} aria-label="Close navigation">
@@ -52,9 +54,9 @@ export function Sidebar({ activeView, username, mobileOpen = false, onClose, onL
               onClose?.();
             }}
           >
-            <span className={`nav-dot ${item.accent === "lilac" ? "nav-dot--lilac" : ""}`} aria-hidden="true" />
+            <span className="nav-dot"><NavIcon view={item.view} /></span>
             {item.label}
-            {item.view === "purchases" && <span className="nav-note">Next</span>}
+            {activeView === item.view && <span className="nav-arrow" aria-hidden="true">↗</span>}
           </button>
         ))}
       </nav>
@@ -63,8 +65,8 @@ export function Sidebar({ activeView, username, mobileOpen = false, onClose, onL
         <div className="sidebar__tip">
           <span className="tip-icon" aria-hidden="true">✦</span>
           <div>
-            <strong>Learning mode</strong>
-            <p>Server totals and payment locks stay authoritative.</p>
+            <strong>A little more clarity.</strong>
+            <p>Your stock, sales, and finances. Together in one workspace.</p>
           </div>
         </div>
         <div className="user-chip">

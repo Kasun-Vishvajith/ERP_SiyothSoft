@@ -56,7 +56,7 @@ Create the named volume once if needed, then run `docker compose up --build -d` 
 - Colors use cool off-white surfaces, white cards, muted cornflower-blue actions, mint payment states and lilac purchase accents.
 - Invoice-form and purchase-form totals are previews only; backend services calculate authoritative totals and snapshot values. Invoice summaries/detail/delete and payment history/submission use API calls. No mock record set is retained in the frontend.
 - Any invoice or purchase with a recorded payment is locked from editing/deletion by the backend rule.
-- Manual payments use request IDs and parent-row locks; there is no payment gateway or inventory mutation. The payment form calls the API for either an invoice or purchase, pages unpaid choices independently and refreshes its lookup after a successful payment.
+- Manual payments use request IDs and parent-row locks; there is no payment gateway. Purchases add stock and invoices deduct stock transactionally, while the payment form calls the API for either an invoice or purchase, pages unpaid choices independently and refreshes its lookup after a successful payment.
 - Session cookies and CSRF are framework-managed; the frontend keeps only the CSRF token in memory and returns to login when a later session request receives 401.
 
 ## Frontend file map

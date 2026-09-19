@@ -78,7 +78,7 @@ export function InvoiceForm({ invoice, onCancel, onSave }: InvoiceFormProps) {
   const productOptions = useMemo(() => {
     const selectedProducts = invoice?.items
       .filter((item) => !products.some((product) => product.id === item.productId))
-      .map((item) => ({ id: item.productId, name: item.productName, price: item.unitPrice })) ?? [];
+      .map((item) => ({ id: item.productId, name: item.productName, price: item.unitPrice, stockCount: 0 })) ?? [];
     return [...selectedProducts, ...products];
   }, [invoice, products]);
 

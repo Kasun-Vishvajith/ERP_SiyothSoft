@@ -90,7 +90,7 @@ class BusinessFlowIntegrationTest {
         supplierRepository.deleteAllInBatch();
         productRepository.deleteAllInBatch();
 
-        product = productRepository.saveAndFlush(new Product("Notebook", new BigDecimal("250.00")));
+        product = productRepository.saveAndFlush(new Product("Notebook", new BigDecimal("250.00"), 10));
         customer = customerRepository.saveAndFlush(new Customer("Acme Retail", null, "0771234567"));
         supplier = supplierRepository.saveAndFlush(new Supplier("Acme Wholesale", null, "0777654321"));
     }
@@ -113,6 +113,9 @@ class BusinessFlowIntegrationTest {
                 .andExpect(jsonPath("$.total", is("500.00")))
                 .andExpect(jsonPath("$.items[0].unitPrice", is("250.00")))
                 .andReturn().getResponse().getContentAsString();
+
+        org.junit.jupiter.api.Assertions.assertEquals(8,
+                productRepository.findById(product.getId()).orElseThrow().getStockCount());
 
         Number invoiceId = JsonPath.read(response, "$.id");
         product.update("Notebook", new BigDecimal("300.00"));

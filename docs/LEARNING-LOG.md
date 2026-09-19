@@ -823,8 +823,36 @@ Boot 4 Flyway startup was corrected by using the dedicated `spring-boot-starter-
 
 ### Protected boundaries
 
-`ERP-Learning-Pack/` remains ignored and unchanged. `.gitignore` remains unchanged. No payment gateway or inventory functionality was added; payments remain manual and inventory is not mutated.
+`ERP-Learning-Pack/` remains ignored and unchanged. `.gitignore` remains unchanged. No payment gateway was added. Inventory is now maintained through product stock counts and invoice/purchase movements; payments remain manual and do not move stock.
 
 ### Next single subtask
 
 Repeat the acceptance matrix after future feature changes. Current source, container, API, persistence and browser verification are complete for the proposed learning-pack scope.
+
+## 2026-09-19 — inventory stock movement
+
+### Goal
+
+Connect the inventory stock-count area to purchase and invoice quantities so the displayed on-hand count changes with real business documents.
+
+### What changed
+
+| File group | Change | Why |
+| --- | --- | --- |
+| `backend/src/main/resources/db/migration/V6__add_product_stock_count.sql` | Added a non-negative `products.stock_count` column with a zero default. | Existing products receive a safe starting count and future counts persist. |
+| `backend/src/main/java/com/kalara/erp/product/` | Added stock count to the entity/request/response and added pessimistic product-row locking. | Stock movement is server-owned and concurrent document writes do not oversell the same units. |
+| `backend/src/main/java/com/kalara/erp/invoice/InvoiceService.java` | Deducts invoice quantities and reverses quantities on unpaid edits/deletes. | Sales now affect on-hand inventory atomically. |
+| `backend/src/main/java/com/kalara/erp/purchase/PurchaseService.java` | Adds purchase quantities and reverses quantities on unpaid edits/deletes. | Receiving stock through purchases now affects on-hand inventory atomically. |
+| `frontend/src/pages/InventoryPage.tsx` | Added inventory summaries, filters and persisted count editing. | Users can review and correct the opening/current count from the UI. |
+| `frontend/src/components/ProductForm.tsx`, `frontend/src/pages/ProductsPage.tsx` | Added opening stock input and stock visibility to the product catalogue. | Product setup and inventory status stay connected. |
+
+### Business rules
+
+- An invoice cannot reduce a product below zero; the API returns HTTP 409 and rolls back the invoice transaction.
+- Purchase and invoice edits are allowed only while the document has no payment, matching the existing payment-lock rule.
+- A purchase increases stock when it is created and an invoice decreases stock when it is created; recording payment does not move stock again.
+- Existing products start at zero after V6 unless the user sets an opening count in the product or inventory UI.
+
+### Verification status
+
+Source-level checks and `git diff --check` passed. The host does not have Maven or frontend dependencies available, so the Docker-backed compile, migration and integration checks must be rerun after this change.

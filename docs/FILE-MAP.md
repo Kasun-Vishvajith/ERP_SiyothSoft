@@ -44,6 +44,7 @@ This is the actual project inventory. Planned files are added only when the corr
 | `frontend/src/components/PurchaseForm.tsx` | implemented | Purchase create/edit form with supplier/product lookups and explicit unit costs. |
 | `frontend/src/pages/InvoicesPage.tsx` | implemented | Server-backed invoice summaries with server search/status filters, pagination, loading/error states and responsive records. |
 | `frontend/src/pages/ProductsPage.tsx` | implemented | Authenticated product list with readable table/card records, loading, empty, error, success, pagination and CRUD states. |
+| `frontend/src/pages/InventoryPage.tsx` | implemented | Stock dashboard with total/low/out-of-stock summaries, filters and persisted on-hand count editing. |
 | `frontend/src/pages/CustomersPage.tsx` | implemented | Customer table/card records, pagination, CRUD actions, success notices and referenced-record error display. |
 | `frontend/src/pages/SuppliersPage.tsx` | implemented | Supplier table/card records, pagination, CRUD actions, success notices and referenced-record error display. |
 | `frontend/src/pages/PurchasesPage.tsx` | implemented | Purchase list, responsive records, server-backed CRUD, payment action and paid-record locking. |
@@ -70,11 +71,11 @@ This is the actual project inventory. Planned files are added only when the corr
 | `backend/src/main/resources/db/migration/V1__create_products.sql` | implemented and applied | First Flyway migration for the products table. |
 | `backend/src/main/java/com/kalara/erp/common/PageResponse.java` | implemented and verified | Stable pagination response shape. |
 | `backend/src/main/java/com/kalara/erp/common/ApiExceptionHandler.java` | implemented and verified | Converts expected validation, malformed JSON, missing-record and constraint failures to safe API responses. |
-| `backend/src/main/java/com/kalara/erp/product/Product.java` | implemented and verified | JPA mapping for the products table. |
-| `backend/src/main/java/com/kalara/erp/product/ProductRequest.java` | implemented and verified | Validated create/update input without a client-owned ID. |
-| `backend/src/main/java/com/kalara/erp/product/ProductResponse.java` | implemented and verified | API output with money represented as a two-decimal string. |
-| `backend/src/main/java/com/kalara/erp/product/ProductRepository.java` | implemented and verified | Spring Data access and pagination for products. |
-| `backend/src/main/java/com/kalara/erp/product/ProductService.java` | implemented and verified | Product rules, stable pagination, CRUD and transaction boundaries. |
+| `backend/src/main/java/com/kalara/erp/product/Product.java` | implemented and verified | JPA mapping for products, persisted stock count and guarded stock increase/decrease operations. |
+| `backend/src/main/java/com/kalara/erp/product/ProductRequest.java` | implemented and verified | Validated create/update input including optional non-negative stock count. |
+| `backend/src/main/java/com/kalara/erp/product/ProductResponse.java` | implemented and verified | API output with money represented as a two-decimal string plus stock count. |
+| `backend/src/main/java/com/kalara/erp/product/ProductRepository.java` | implemented and verified | Spring Data access, pagination and pessimistic row locks for stock movement. |
+| `backend/src/main/java/com/kalara/erp/product/ProductService.java` | implemented and verified | Product rules, stable pagination, CRUD, stock count updates and transaction boundaries. |
 | `backend/src/main/java/com/kalara/erp/product/ProductController.java` | implemented and verified | Product HTTP endpoints under `/api/products`. |
 | `backend/src/main/resources/db/migration/V2__create_parties.sql` | implemented and applied | Customer and supplier tables. |
 | `backend/src/main/java/com/kalara/erp/customer/Customer.java` | implemented and verified | Customer identity/contact entity. |
@@ -98,7 +99,7 @@ This is the actual project inventory. Planned files are added only when the corr
 | `backend/src/main/java/com/kalara/erp/invoice/InvoiceResponse.java` | implemented and verified | Invoice detail output with snapshots and money strings. |
 | `backend/src/main/java/com/kalara/erp/invoice/InvoiceRepository.java` | implemented and verified | Invoice header persistence. |
 | `backend/src/main/java/com/kalara/erp/invoice/InvoiceItemRepository.java` | implemented and verified | Ordered line retrieval and transactional replacement. |
-| `backend/src/main/java/com/kalara/erp/invoice/InvoiceService.java` | implemented and verified | Atomic server calculations, snapshots, create/edit/delete and pagination. |
+| `backend/src/main/java/com/kalara/erp/invoice/InvoiceService.java` | implemented and verified | Atomic server calculations, snapshots, stock deduction/reversal, create/edit/delete and pagination. |
 | `backend/src/main/java/com/kalara/erp/invoice/InvoiceController.java` | implemented and verified | `/api/invoices` list/detail/create/update/delete endpoints. |
 | `backend/src/main/resources/db/migration/V4__create_purchases.sql` | implemented and applied | Purchase headers, cost lines, constraints and indexes. |
 | `backend/src/main/java/com/kalara/erp/purchase/Purchase.java` | implemented and verified | Purchase header and supplier snapshot mapping. |
@@ -108,9 +109,10 @@ This is the actual project inventory. Planned files are added only when the corr
 | `backend/src/main/java/com/kalara/erp/purchase/PurchaseResponse.java` | implemented and verified | Purchase detail output with cost snapshots and balance placeholders. |
 | `backend/src/main/java/com/kalara/erp/purchase/PurchaseRepository.java` | implemented and verified | Purchase header persistence and payment-status filtering. |
 | `backend/src/main/java/com/kalara/erp/purchase/PurchaseItemRepository.java` | implemented and verified | Ordered line retrieval and replacement. |
-| `backend/src/main/java/com/kalara/erp/purchase/PurchaseService.java` | implemented and verified | Purchase-cost calculations, payment-status filtering and transaction rules without changing stock. |
+| `backend/src/main/java/com/kalara/erp/purchase/PurchaseService.java` | implemented and verified | Purchase-cost calculations, stock addition/reversal, payment-status filtering and transaction rules. |
 | `backend/src/main/java/com/kalara/erp/purchase/PurchaseController.java` | implemented and verified | `/api/purchases` HTTP endpoints including status-filtered lists. |
 | `backend/src/main/resources/db/migration/V5__create_payments.sql` | implemented and applied | Append-only payments with exclusive parent ownership and unique retry IDs. |
+| `backend/src/main/resources/db/migration/V6__add_product_stock_count.sql` | implemented | Adds a non-negative persisted stock count to products with a zero default for existing rows. |
 | `backend/src/main/java/com/kalara/erp/payment/Payment.java` | implemented and verified | Payment table mapping. |
 | `backend/src/main/java/com/kalara/erp/payment/PaymentMethod.java` | implemented and verified | Closed CASH/BANK_TRANSFER method set. |
 | `backend/src/main/java/com/kalara/erp/payment/PaymentRequest.java` | implemented and verified | Retry-safe payment input and amount validation. |

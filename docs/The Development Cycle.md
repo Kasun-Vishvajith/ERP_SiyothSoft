@@ -14,7 +14,7 @@ It is written for someone who wants to understand the codebase, not only copy co
 - what the file extensions mean; and
 - how to run and test the application.
 
-The project is intentionally small. It includes products, customers, suppliers, sales invoices, purchases and manual payments. It does not include a payment gateway, stock/inventory changes, or a large multi-user identity system.
+The project is intentionally small. It includes products, customers, suppliers, sales invoices, purchases, inventory counts and manual payments. It does not include a payment gateway or a large multi-user identity system.
 
 ---
 
@@ -45,7 +45,7 @@ For example:
 5. The customer pays later or immediately.
 6. The payment reduces the invoice balance.
 
-The application also records purchases from suppliers. A purchase uses a cost entered by the user. It does not change stock because inventory is outside this learning scope.
+The application also records purchases from suppliers. A purchase uses a cost entered by the user and increases the on-hand quantity for each purchased product. Sales invoices decrease on-hand quantity, so inventory remains connected to the two document flows.
 
 ### The most important rule
 
@@ -327,7 +327,7 @@ GET /api/invoices?q=Runtime&status=PAID&page=0&size=10
 
 Status is derived from the saved invoice total and the sum of its payments. It is `UNPAID`, `PARTIALLY_PAID` or `PAID`.
 
-### Stage 8: Build purchases without inventory side effects
+### Stage 8: Build purchases with inventory movement
 
 Purchases are similar to invoices, but they represent buying from a supplier. A purchase line includes a unit cost:
 
@@ -339,7 +339,20 @@ Purchases are similar to invoices, but they represent buying from a supplier. A 
 }
 ```
 
-The backend calculates the purchase total from cost and quantity and snapshots the supplier and product names. The form says that the selling price is not changed. No stock count is created or changed because inventory is outside this project.
+The backend calculates the purchase total from cost and quantity and snapshots the supplier and product names. The selling price is not changed, but each purchase line increases the product's on-hand stock count. The operation is part of the same transaction as the purchase header and lines.
+
+### Stage 8.1: Connect invoice and purchase quantities to stock
+
+Products now contain a persisted non-negative `stock_count`. The inventory page allows a user to set an opening or corrected count. After that:
+
+- creating a purchase adds each line quantity to stock;
+- creating an invoice subtracts each line quantity from stock;
+- editing an unpaid purchase or invoice reverses the old line quantities and applies the new ones;
+- deleting an unpaid purchase or invoice reverses its stock movement;
+- paid or partially paid documents remain locked, so their stock movement cannot be silently changed; and
+- an invoice that would make stock negative is rejected with HTTP 409.
+
+Product rows are pessimistically locked in stable ID order while stock is moved. This prevents two concurrent invoices from selling the same remaining units.
 
 ### Stage 9: Build manual payments safely
 
@@ -779,7 +792,7 @@ Examples in this project explain:
 - why the payment request ID stays stable during a retry;
 - why tests use a separate database;
 - why the runtime container uses a non-root user; and
-- why a purchase does not mutate inventory.
+- why invoice and purchase quantities move inventory under product-row locks.
 
 When a rule changes, update its nearby comment. Do not add comments that promise behavior the code does not implement.
 
@@ -808,7 +821,7 @@ The completed acceptance work verified:
 - desktop layout at 1366px; and
 - visible keyboard focus.
 
-The learning pack and `.gitignore` remain unchanged. No gateway or inventory feature was added.
+The learning pack and `.gitignore` remain unchanged. No gateway was added. Inventory is now maintained through product stock counts and invoice/purchase movements.
 
 ---
 

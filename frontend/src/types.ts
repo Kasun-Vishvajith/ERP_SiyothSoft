@@ -1,7 +1,7 @@
-export type ViewName = "products" | "invoices" | "payments" | "purchases" | "customers" | "suppliers";
+export type ViewName = "inventory" | "products" | "invoices" | "payments" | "purchases" | "customers" | "suppliers";
 
-export type Product = { id: number; name: string; price: string };
-export type ProductInput = { name: string; price: string };
+export type Product = { id: number; name: string; price: string; stockCount: number };
+export type ProductInput = { name: string; price: string; stockCount: number };
 export type PageResult<T> = {
   content: T[];
   page: number;

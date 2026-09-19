@@ -18,9 +18,10 @@ export function LoginPage({ busy, error, onSubmit }: LoginPageProps) {
 
   return (
     <main className="auth-shell">
+      <div className="auth-story"><span className="context-tag">SIYOTHSOFT / ERP</span><h2>Less friction.<br />More <span>forward.</span></h2><p>A clearer view of your business. Bring your inventory, sales, and payments into one connected workspace.</p><div className="auth-art" aria-hidden="true"><div /><div /><div /><div /><span>Everything in balance. ↗</span></div></div>
       <section className="auth-card" aria-labelledby="login-title">
-        <div className="auth-card__brand"><span className="brand-mark" aria-hidden="true">M</span><span>Mini ERP</span></div>
-        <span className="eyebrow">Business workspace</span>
+        <div className="auth-card__brand"><span className="brand-mark" aria-hidden="true">S</span><span>SiyothSoft ERP</span></div>
+        <span className="eyebrow">Secure business workspace</span>
         <h1 id="login-title">Welcome back</h1>
         <p className="auth-card__intro">Sign in to continue to your invoices and payment records.</p>
         {error && <div className="alert alert--error" role="alert">{error}</div>}

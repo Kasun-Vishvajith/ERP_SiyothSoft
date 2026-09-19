@@ -78,7 +78,7 @@ export function PurchasesPage({ reloadKey: externalReloadKey, onRowsLoaded, onRe
         <div>
           <span className="eyebrow">Buying workspace</span>
           <h2>Purchases</h2>
-          <p className="form-help">Purchase costs are separate from catalogue selling prices and do not change inventory.</p>
+          <p className="form-help">Purchase costs are separate from catalogue selling prices. Saving a purchase adds its quantities to inventory.</p>
         </div>
         {!formOpen && <button className="button button--primary" type="button" onClick={() => { setEditing(undefined); setFormOpen(true); }}>New purchase</button>}
       </div>

@@ -21,17 +21,29 @@ public class Product {
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "stock_count", nullable = false)
+    private Integer stockCount;
+
     protected Product() {
         // JPA creates entities through this constructor when reading a row.
     }
 
     public Product(String name, BigDecimal price) {
-        update(name, price);
+        this(name, price, 0);
+    }
+
+    public Product(String name, BigDecimal price, Integer stockCount) {
+        update(name, price, stockCount);
     }
 
     public void update(String name, BigDecimal price) {
+        update(name, price, this.stockCount == null ? 0 : this.stockCount);
+    }
+
+    public void update(String name, BigDecimal price, Integer stockCount) {
         this.name = name.trim();
         this.price = price;
+        this.stockCount = stockCount == null ? 0 : stockCount;
     }
 
     public Long getId() {
@@ -44,5 +56,21 @@ public class Product {
 
     public BigDecimal getPrice() {
         return price;
+    }
+
+    public Integer getStockCount() {
+        return stockCount;
+    }
+
+    public void increaseStock(int quantity) {
+        if (quantity < 0) throw new IllegalArgumentException("Quantity must not be negative");
+        stockCount = Math.addExact(stockCount, quantity);
+    }
+
+    public void decreaseStock(int quantity) {
+        if (quantity < 0 || quantity > stockCount) {
+            throw new IllegalArgumentException("Insufficient stock");
+        }
+        stockCount -= quantity;
     }
 }

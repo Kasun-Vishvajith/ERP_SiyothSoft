@@ -36,12 +36,13 @@ public class ProductService {
     }
 
     public ProductResponse create(ProductRequest request) {
-        return ProductResponse.from(repository.save(new Product(request.name(), request.price())));
+        return ProductResponse.from(repository.save(new Product(request.name(), request.price(), request.stockCount())));
     }
 
     public ProductResponse update(Long id, ProductRequest request) {
-        Product product = require(id);
-        product.update(request.name(), request.price());
+        Product product = repository.findForUpdate(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+        product.update(request.name(), request.price(), request.stockCount() == null ? product.getStockCount() : request.stockCount());
         // The managed entity is flushed when this transaction commits.
         return ProductResponse.from(product);
     }

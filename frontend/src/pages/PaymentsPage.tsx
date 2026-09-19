@@ -205,7 +205,7 @@ export function PaymentsPage({ invoices, purchases, payments, initialTarget, onS
       <div className="payment-layout">
         <div className="form-card payment-form-card">
           <div className="section-heading"><div><span className="eyebrow">Manual payment</span><h2>Record money already received</h2></div><span className="mint-icon" aria-hidden="true">✓</span></div>
-          <p className="form-help">This records an offline payment for an invoice or purchase. It does not connect to a gateway or change inventory.</p>
+          <p className="form-help">This records an offline payment for an invoice or purchase. Stock is moved when the invoice or purchase is created, not when it is paid.</p>
           {errors.length > 0 && <div className="alert alert--error" role="alert"><strong>Payment could not be recorded</strong><ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
           {lookupError && <div className="alert alert--error" role="alert">{lookupError}</div>}
           <form onSubmit={submit} noValidate>

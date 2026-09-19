@@ -9,7 +9,11 @@ import com.kalara.erp.supplier.Supplier;
 import com.kalara.erp.supplier.SupplierRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -63,7 +67,9 @@ public class PurchaseService {
     public PurchaseResponse create(PurchaseRequest request) {
         Supplier supplier = supplierRepository.findById(request.supplierId()).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found"));
-        Calculation calculation = calculateLines(request.items());
+        Map<Long, Product> products = lockProducts(request.items().stream().map(PurchaseRequest.Line::productId).toList());
+        Calculation calculation = calculateLines(request.items(), products);
+        applyStockDelta(Map.of(), quantitiesByProduct(calculation.lines()), products);
         Purchase purchase = purchaseRepository.save(new Purchase(
                 "PUR-" + UUID.randomUUID(), request.date(), supplier.getId(), supplier.getName(),
                 request.notes(), calculation.total()));
@@ -77,7 +83,12 @@ public class PurchaseService {
         rejectPaid(purchase);
         Supplier supplier = supplierRepository.findById(request.supplierId()).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Supplier not found"));
-        Calculation calculation = calculateLines(request.items());
+        List<PurchaseItem> previousItems = itemRepository.findByPurchaseIdOrderByIdAsc(id);
+        TreeSet<Long> productIds = new TreeSet<>(request.items().stream().map(PurchaseRequest.Line::productId).toList());
+        productIds.addAll(previousItems.stream().map(PurchaseItem::getProductId).toList());
+        Map<Long, Product> products = lockProducts(productIds);
+        Calculation calculation = calculateLines(request.items(), products);
+        applyStockDelta(quantitiesByItems(previousItems), quantitiesByProduct(calculation.lines()), products);
         purchase.update(request.date(), supplier.getId(), supplier.getName(), request.notes(), calculation.total());
         itemRepository.deleteByPurchaseId(id);
         itemRepository.flush();
@@ -89,21 +100,66 @@ public class PurchaseService {
     public void delete(Long id) {
         Purchase purchase = requireForUpdate(id);
         rejectPaid(purchase);
+        List<PurchaseItem> previousItems = itemRepository.findByPurchaseIdOrderByIdAsc(id);
+        Map<Long, Product> products = lockProducts(previousItems.stream().map(PurchaseItem::getProductId).toList());
+        applyStockDelta(quantitiesByItems(previousItems), Map.of(), products);
         purchaseRepository.delete(purchase);
         purchaseRepository.flush();
     }
 
-    private Calculation calculateLines(List<PurchaseRequest.Line> requestedLines) {
+    private Calculation calculateLines(List<PurchaseRequest.Line> requestedLines, Map<Long, Product> products) {
         List<LineValue> lines = new ArrayList<>();
         BigDecimal total = BigDecimal.ZERO.setScale(2);
         for (PurchaseRequest.Line line : requestedLines) {
-            Product product = productRepository.findById(line.productId()).orElseThrow(() ->
-                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+            Product product = products.get(line.productId());
+            if (product == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found");
             BigDecimal lineTotal = Money.lineTotal(line.unitPrice(), line.quantity());
             total = Money.checked(total.add(lineTotal));
             lines.add(new LineValue(product, line.quantity(), line.unitPrice(), lineTotal));
         }
         return new Calculation(total, lines);
+    }
+
+    private Map<Long, Product> lockProducts(Collection<Long> ids) {
+        Map<Long, Product> products = new HashMap<>();
+        for (Long id : new TreeSet<>(ids)) {
+            Product product = productRepository.findForUpdate(id).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+            products.put(id, product);
+        }
+        return products;
+    }
+
+    private Map<Long, Integer> quantitiesByProduct(List<LineValue> lines) {
+        Map<Long, Integer> quantities = new HashMap<>();
+        for (LineValue line : lines) quantities.merge(line.product().getId(), line.quantity(), Integer::sum);
+        return quantities;
+    }
+
+    private Map<Long, Integer> quantitiesByItems(List<PurchaseItem> items) {
+        Map<Long, Integer> quantities = new HashMap<>();
+        for (PurchaseItem item : items) quantities.merge(item.getProductId(), item.getQuantity(), Integer::sum);
+        return quantities;
+    }
+
+    private void applyStockDelta(Map<Long, Integer> previous, Map<Long, Integer> next, Map<Long, Product> products) {
+        TreeSet<Long> ids = new TreeSet<>(previous.keySet());
+        ids.addAll(next.keySet());
+        for (Long id : ids) {
+            Product product = products.get(id);
+            int delta = next.getOrDefault(id, 0) - previous.getOrDefault(id, 0);
+            if (delta > 0) {
+                product.increaseStock(delta);
+            } else if (delta < 0) {
+                int requested = -delta;
+                if (requested > product.getStockCount()) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,
+                            "Cannot remove " + requested + " units of " + product.getName()
+                                    + "; only " + product.getStockCount() + " remain");
+                }
+                product.decreaseStock(requested);
+            }
+        }
     }
 
     private void saveItems(Long purchaseId, List<LineValue> lines) {

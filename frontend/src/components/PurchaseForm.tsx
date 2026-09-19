@@ -54,7 +54,7 @@ export function PurchaseForm({ purchase, onCancel, onSaved }: PurchaseFormProps)
   const productOptions = useMemo(() => {
     const selectedProducts = purchase?.items
       .filter((item) => !products.some((product) => product.id === item.productId))
-      .map((item) => ({ id: item.productId, name: item.productName, price: item.unitPrice })) ?? [];
+      .map((item) => ({ id: item.productId, name: item.productName, price: item.unitPrice, stockCount: 0 })) ?? [];
     return [...selectedProducts, ...products];
   }, [products, purchase]);
 

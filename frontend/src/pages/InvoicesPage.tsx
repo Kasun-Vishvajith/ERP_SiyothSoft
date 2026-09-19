@@ -4,6 +4,7 @@ import { EmptyState } from "../components/EmptyState";
 import { StatusBadge } from "../components/StatusBadge";
 import { formatMoney } from "../utils";
 import type { Invoice, InvoiceSummary, PageResult } from "../types";
+import { InvoiceInsights } from "../components/InvoiceInsights";
 
 type InvoicesPageProps = {
   reloadKey: number;
@@ -80,6 +81,7 @@ export function InvoicesPage({
 
   return (
     <section className="page-section">
+      <div className="workspace-heading"><div><span className="eyebrow">Your business, at a glance</span><h2>Make every sale count<span>.</span></h2><p>Keep invoices moving and your cash flow in focus.</p></div><span className="context-tag">Sales overview <span aria-hidden="true">↗</span></span></div>
       {notice && <div className="alert alert--success" role="status">{notice}</div>}
       {actionError && <div className="alert alert--error" role="alert">{actionError}</div>}
 
@@ -87,20 +89,22 @@ export function InvoicesPage({
         <div className="summary-card">
           <span className="summary-card__label">Open balance</span>
           <strong>LKR {formatMoney(visibleInvoices.reduce((sum, invoice) => sum + Number(invoice.balance), 0).toFixed(2))}</strong>
-          <span className="summary-card__hint">Across unpaid invoices</span>
+          <span className="summary-card__hint">Unpaid balance · current page</span>
         </div>
         <div className="summary-card summary-card--mint">
-          <span className="summary-card__label">Collected this period</span>
+          <span className="summary-card__label">Payments collected</span>
           <strong>LKR {formatMoney(visibleInvoices.reduce((sum, invoice) => sum + Number(invoice.amountPaid), 0).toFixed(2))}</strong>
-          <span className="summary-card__hint">Recorded manually</span>
+          <span className="summary-card__hint">Recorded payments · current page</span>
         </div>
         <div className="summary-card summary-card--lilac">
           <span className="summary-card__label">Invoices</span>
           <strong>{totalResults}</strong>
-          <span className="summary-card__hint">Historical records retained</span>
+          <span className="summary-card__hint">Matching your current filters</span>
         </div>
       </div>
 
+      <InvoiceInsights invoices={visibleInvoices} />
+      <div className="list-heading"><h2>Invoice activity</h2><span>Manage your sales records</span></div>
       <div className="toolbar">
         <div className="search-field">
           <label htmlFor="invoice-search">Search invoices</label>
@@ -163,7 +167,7 @@ function InvoiceTableRow({ invoice, onEdit, onDelete, onPayment }: { invoice: In
   const locked = Number(invoice.amountPaid) > 0;
   return (
     <tr>
-      <td><strong>{invoice.number}</strong><span className="table-subline">Server summary</span></td>
+      <td><strong>{invoice.number}</strong><span className="table-subline">Sales invoice</span></td>
       <td>{invoice.customerName}</td>
       <td>{invoice.date}</td>
       <td className="money">LKR {formatMoney(invoice.total)}</td>
@@ -180,7 +184,7 @@ function InvoiceCard({ invoice, onEdit, onDelete, onPayment }: { invoice: Invoic
     <article className="record-card">
       <div className="record-card__topline"><strong>{invoice.number}</strong><StatusBadge status={invoice.paymentStatus} /></div>
       <p className="record-card__customer">{invoice.customerName}</p>
-      <div className="record-card__meta"><span>{invoice.date}</span><span>Server summary</span></div>
+      <div className="record-card__meta"><span>{invoice.date}</span><span>Sales invoice</span></div>
       <div className="record-card__amounts"><div><span>Total</span><strong>LKR {formatMoney(invoice.total)}</strong></div><div><span>Balance</span><strong>LKR {formatMoney(invoice.balance)}</strong></div></div>
       <InvoiceActions invoice={invoice} locked={locked} onEdit={onEdit} onDelete={onDelete} onPayment={onPayment} />
     </article>

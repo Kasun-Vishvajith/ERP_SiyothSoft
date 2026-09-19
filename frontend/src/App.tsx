@@ -5,6 +5,7 @@ import { InvoicesPage } from "./pages/InvoicesPage";
 import { PaymentsPage } from "./pages/PaymentsPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ProductsPage } from "./pages/ProductsPage";
+import { InventoryPage } from "./pages/InventoryPage";
 import { CustomersPage } from "./pages/CustomersPage";
 import { SuppliersPage } from "./pages/SuppliersPage";
 import { PurchasesPage } from "./pages/PurchasesPage";
@@ -13,6 +14,7 @@ import type { Invoice, Payment, Purchase, ViewName } from "./types";
 import "./styles.scss";
 
 const pageTitles: Record<ViewName, { title: string; eyebrow: string }> = {
+  inventory: { title: "Inventory", eyebrow: "Stock control" },
   products: { title: "Products", eyebrow: "Catalogue" },
   invoices: { title: "Invoices", eyebrow: "Sales workspace" },
   payments: { title: "Payments", eyebrow: "Cash movement" },
@@ -195,7 +197,7 @@ export default function App() {
         <header className="topbar">
           <button className="menu-button" type="button" aria-label="Open navigation" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><span aria-hidden="true">☰</span></button>
           <div className="topbar__title"><span className="eyebrow">{currentPage.eyebrow}</span><h1>{invoiceFormOpen ? (editingInvoice ? "Edit invoice" : "New invoice") : currentPage.title}</h1></div>
-          <div className="topbar__right"><span className="status-dot" aria-hidden="true" /> <span className="topbar__online">Local workspace</span><span className="avatar avatar--small" aria-hidden="true">KS</span></div>
+          <div className="topbar__right"><span className="workspace-pill">SiyothSoft / Workspace</span><span className="avatar avatar--small" aria-label={`Signed in as ${username}`}>{username.slice(0, 2).toUpperCase()}</span></div>
         </header>
 
         <div className="content-wrap">
@@ -203,6 +205,7 @@ export default function App() {
           {activeView === "invoices" && !invoiceFormOpen && <InvoicesPage reloadKey={invoiceReloadKey} onRowsLoaded={setInvoices} actionError={invoiceError} notice={notice} onNewInvoice={openNewInvoice} onEditInvoice={openEditInvoice} onDeleteInvoice={deleteInvoice} onRecordPayment={(id) => openPayment({ kind: "invoice", id })} />}
           {activeView === "payments" && <PaymentsPage invoices={invoices} purchases={purchases} payments={payments} initialTarget={paymentTarget} onSavePayment={savePayment} />}
           {activeView === "products" && <ProductsPage />}
+          {activeView === "inventory" && <InventoryPage />}
           {activeView === "customers" && <CustomersPage />}
           {activeView === "suppliers" && <SuppliersPage />}
           {activeView === "purchases" && <PurchasesPage reloadKey={purchaseReloadKey} onRowsLoaded={setPurchases} onRecordPayment={(id) => openPayment({ kind: "purchase", id })} />}
