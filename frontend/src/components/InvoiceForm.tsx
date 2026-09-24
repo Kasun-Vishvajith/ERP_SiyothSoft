@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { request } from "../api";
 import { LookupPager } from "./LookupPager";
-import type { Customer, Invoice, InvoiceDraft, InvoiceDraftItem, PageResult, Product } from "../types";
+import type { Customer, Invoice, InvoiceDocumentStatus, InvoiceDraft, InvoiceDraftItem, PageResult, Product } from "../types";
 
 type InvoiceFormProps = {
   invoice?: Invoice;
@@ -27,6 +27,7 @@ function createDraft(invoice?: Invoice): InvoiceDraft {
     customerId: invoice?.customerId ?? "",
     date: invoice?.date ?? new Date().toISOString().slice(0, 10),
     notes: invoice?.notes ?? "",
+    documentStatus: invoice?.documentStatus ?? "DRAFT",
     items: invoice?.items.map((item) => ({ key: newRowKey(), productId: item.productId, quantity: String(item.quantity) }))
       ?? [{ key: newRowKey(), productId: "", quantity: "1" }],
   };
@@ -44,7 +45,7 @@ export function InvoiceForm({ invoice, onCancel, onSave }: InvoiceFormProps) {
   const [lookupError, setLookupError] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-  const isLocked = Boolean(invoice && Number(invoice.amountPaid) > 0);
+  const isLocked = Boolean(invoice && (Number(invoice.amountPaid) > 0 || invoice.documentStatus === "CANCELLED"));
 
   useEffect(() => {
     const controller = new AbortController();
@@ -106,8 +107,7 @@ export function InvoiceForm({ invoice, onCancel, onSave }: InvoiceFormProps) {
     return nextErrors;
   }
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function submitWithStatus(nextStatus: InvoiceDocumentStatus) {
     if (saving || isLocked) return;
     const nextErrors = validate();
     setErrors(nextErrors);
@@ -120,8 +120,9 @@ export function InvoiceForm({ invoice, onCancel, onSave }: InvoiceFormProps) {
         body: JSON.stringify({
           customerId: draft.customerId,
           date: draft.date,
-          notes: draft.notes.trim(),
-          items: draft.items.map((item) => ({ productId: item.productId, quantity: Number(item.quantity) })),
+           notes: draft.notes.trim(),
+           documentStatus: nextStatus,
+           items: draft.items.map((item) => ({ productId: item.productId, quantity: Number(item.quantity) })),
         }),
       });
       setSaving(false);
@@ -132,6 +133,11 @@ export function InvoiceForm({ invoice, onCancel, onSave }: InvoiceFormProps) {
     }
   }
 
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void submitWithStatus(draft.documentStatus);
+  }
+
   return (
     <section className="form-layout">
       <div className="form-intro">
@@ -140,13 +146,13 @@ export function InvoiceForm({ invoice, onCancel, onSave }: InvoiceFormProps) {
           <div>
             <span className="eyebrow">{invoice ? "Edit draft" : "New record"}</span>
             <h2>{invoice ? invoice.number : "Create invoice"}</h2>
-            <p>{invoice ? "Update this unpaid invoice before recording any payment." : "Add a customer and line items. The server will calculate the final total."}</p>
+            <p>{invoice ? "Update this unpaid invoice before recording any payment." : "Choose a customer, add items, then save a draft or issue the invoice."}</p>
           </div>
-          <span className="form-step">1 <span>of</span> 1</span>
+
         </div>
       </div>
 
-      {isLocked && <div className="alert alert--warning" role="alert">This invoice is payment-locked. Paid or partially paid invoices cannot be edited.</div>}
+       {isLocked && <div className="alert alert--warning" role="alert">This invoice is locked and cannot be edited.</div>}
       {lookupError && <div className="alert alert--error" role="alert">{lookupError}</div>}
       {errors.length > 0 && (
         <div className="alert alert--error" role="alert">
@@ -176,7 +182,7 @@ export function InvoiceForm({ invoice, onCancel, onSave }: InvoiceFormProps) {
         </div>
 
         <div className="form-card__section">
-          <div className="section-heading"><div><span className="eyebrow">Line items</span><h3>What was sold?</h3></div><span className="snapshot-note">Server snapshots product names and prices</span></div>
+          <div className="section-heading"><div><span className="eyebrow">Line items</span><h3>What was sold?</h3></div><span className="snapshot-note">Prices are saved with the invoice</span></div>
           <div className="line-items">
             {draft.items.map((item, index) => {
               const product = productOptions.find((candidate) => candidate.id === item.productId);
@@ -192,12 +198,12 @@ export function InvoiceForm({ invoice, onCancel, onSave }: InvoiceFormProps) {
             })}
           </div>
           <LookupPager label="Product" page={productPage} totalPages={productTotalPages} disabled={isLocked || lookupLoading} onPageChange={setProductPage} />
-          <button className="button button--secondary" type="button" onClick={() => setDraft({ ...draft, items: [...draft.items, { key: newRowKey(), productId: "", quantity: "1" }] })} disabled={isLocked}>＋ Add line item</button>
+          <button className="button button--secondary" type="button" onClick={() => setDraft({ ...draft, items: [...draft.items, { key: newRowKey(), productId: "", quantity: "1" }] })} disabled={isLocked}>+ Add line item</button>
         </div>
 
-        <div className="form-card__footer">
-          <div className="total-preview"><span>Estimated total</span><strong>LKR {Number(previewTotal).toLocaleString("en-LK", { minimumFractionDigits: 2 })}</strong><small>Preview only; the backend calculates the saved total.</small></div>
-          <div className="form-actions"><button className="button button--text" type="button" onClick={onCancel}>Cancel</button><button className="button button--primary" type="submit" disabled={saving || isLocked || lookupLoading || Boolean(lookupError)}>{saving ? "Saving…" : invoice ? "Save changes" : "Create invoice"}</button></div>
+          <div className="form-card__footer">
+            <div className="total-preview"><span>Estimated total</span><strong>LKR {Number(previewTotal).toLocaleString("en-LK", { minimumFractionDigits: 2 })}</strong><small>Final total is confirmed when saved.</small></div>
+          <div className="form-actions"><button className="button button--text" type="button" onClick={onCancel}>Cancel</button>{(!invoice || invoice.documentStatus === "DRAFT") && <button className="button button--secondary" type="button" onClick={() => void submitWithStatus("DRAFT")} disabled={saving || isLocked || lookupLoading || Boolean(lookupError)}>{saving ? "Saving…" : "Save draft"}</button>}<button className="button button--primary" type="button" onClick={() => void submitWithStatus("ISSUED")} disabled={saving || isLocked || lookupLoading || Boolean(lookupError)}>{saving ? "Saving…" : invoice?.documentStatus === "ISSUED" ? "Save changes" : "Issue invoice"}</button></div>
         </div>
       </form>
     </section>

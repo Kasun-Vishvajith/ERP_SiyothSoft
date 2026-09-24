@@ -16,7 +16,8 @@ public record InvoiceResponse(
         String total,
         String amountPaid,
         String balance,
-        String paymentStatus) {
+        String paymentStatus,
+        String documentStatus) {
 
     public static InvoiceResponse from(Invoice invoice, List<InvoiceItem> items, BigDecimal amountPaid) {
         BigDecimal paid = Money.checked(amountPaid == null ? BigDecimal.ZERO : amountPaid);
@@ -24,7 +25,8 @@ public record InvoiceResponse(
         return new InvoiceResponse(
                 invoice.getId(), invoice.getNumber(), invoice.getDate(), invoice.getCustomerId(),
                 invoice.getCustomerName(), invoice.getNotes(), items.stream().map(Item::from).toList(),
-                Money.text(invoice.getTotal()), Money.text(paid), Money.text(balance), status(paid, balance));
+                Money.text(invoice.getTotal()), Money.text(paid), Money.text(balance), status(paid, balance),
+                invoice.getDocumentStatus().name());
     }
 
     private static String status(BigDecimal paid, BigDecimal balance) {

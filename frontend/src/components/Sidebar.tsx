@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { ViewName } from "../types";
 import { NavIcon } from "./NavIcon";
 
@@ -10,20 +11,37 @@ type SidebarProps = {
   onNavigate: (view: ViewName) => void;
 };
 
-const navigation: Array<{ label: string; view: ViewName; accent?: "lilac" }> = [
-  { label: "Inventory", view: "inventory" },
-  { label: "Products", view: "products" },
-  { label: "Invoices", view: "invoices" },
-  { label: "Payments", view: "payments" },
-  { label: "Purchases", view: "purchases", accent: "lilac" },
-  { label: "Customers", view: "customers" },
-  { label: "Suppliers", view: "suppliers" },
+const navigation: Array<{ label: string; items: Array<{ label: string; view: ViewName }> }> = [
+  { label: "Overview", items: [{ label: "Home", view: "home" }] },
+  { label: "Sales", items: [{ label: "Invoices", view: "invoices" }, { label: "Customers", view: "customers" }] },
+  { label: "Purchasing", items: [{ label: "Purchases", view: "purchases" }, { label: "Suppliers", view: "suppliers" }] },
+  { label: "Stock", items: [{ label: "Inventory", view: "inventory" }] },
+  { label: "Money", items: [{ label: "Payments", view: "payments" }] },
 ];
 
 export function Sidebar({ activeView, username, mobileOpen = false, onClose, onLogout, onNavigate }: SidebarProps) {
+  const panelRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const panel = panelRef.current;
+    panel?.querySelector<HTMLButtonElement>("button")?.focus();
+    function trap(event: KeyboardEvent) {
+      if (event.key !== "Tab") return;
+      const buttons = panel?.querySelectorAll<HTMLButtonElement>("button:not(:disabled)");
+      if (!buttons?.length) return;
+      const first = buttons[0], last = buttons[buttons.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+    panel?.addEventListener("keydown", trap);
+    return () => panel?.removeEventListener("keydown", trap);
+  }, [mobileOpen]);
   const initials = username.slice(0, 2).toUpperCase();
   return (
     <aside
+      ref={panelRef}
+      role={mobileOpen ? "dialog" : undefined}
+      aria-modal={mobileOpen ? true : undefined}
       className={`sidebar ${mobileOpen ? "sidebar--open" : ""}`}
       aria-label="Application navigation"
       aria-hidden={onClose ? !mobileOpen : undefined}
@@ -41,9 +59,8 @@ export function Sidebar({ activeView, username, mobileOpen = false, onClose, onL
         )}
       </div>
 
-      <div className="sidebar__section-label">Workspace</div>
       <nav className="sidebar__nav">
-        {navigation.map((item) => (
+        {navigation.map((group) => <div className="sidebar__group" key={group.label}><div className="sidebar__section-label">{group.label}</div>{group.items.map((item) => (
           <button
             className={`sidebar__link ${activeView === item.view ? "sidebar__link--active" : ""}`}
             type="button"
@@ -54,21 +71,14 @@ export function Sidebar({ activeView, username, mobileOpen = false, onClose, onL
               onClose?.();
             }}
           >
-            <span className="nav-dot"><NavIcon view={item.view} /></span>
+            <span className="nav-icon"><NavIcon view={item.view} /></span>
             {item.label}
             {activeView === item.view && <span className="nav-arrow" aria-hidden="true">↗</span>}
           </button>
-        ))}
+        ))}</div>)}
       </nav>
 
       <div className="sidebar__footer">
-        <div className="sidebar__tip">
-          <span className="tip-icon" aria-hidden="true">✦</span>
-          <div>
-            <strong>A little more clarity.</strong>
-            <p>Your stock, sales, and finances. Together in one workspace.</p>
-          </div>
-        </div>
         <div className="user-chip">
           <span className="avatar" aria-hidden="true">{initials}</span>
           <div>

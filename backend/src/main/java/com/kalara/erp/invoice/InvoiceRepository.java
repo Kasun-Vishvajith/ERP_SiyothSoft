@@ -22,8 +22,12 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
                 or (:status = 'PARTIALLY_PAID' and (select coalesce(sum(p.amount), 0) from Payment p where p.invoiceId = i.id) > 0
                     and (select coalesce(sum(p.amount), 0) from Payment p where p.invoiceId = i.id) < i.total)
               )
+              and (:documentStatus is null or i.documentStatus = :documentStatus)
             """)
-    Page<Invoice> search(@Param("query") String query, @Param("status") String status, Pageable pageable);
+    Page<Invoice> search(@Param("query") String query,
+                         @Param("status") String status,
+                         @Param("documentStatus") InvoiceDocumentStatus documentStatus,
+                         Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from Invoice i where i.id = :id")

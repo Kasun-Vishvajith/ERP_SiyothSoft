@@ -1,5 +1,16 @@
+# Source-control and local configuration
+.git
+.gitignore
+.env
+.env.*
+
+# Dependencies and generated output
 node_modules
 dist
-.git
-.env
+.npm-cache
+coverage
+
+# Logs and local tooling
 *.log
+.idea
+.vscode

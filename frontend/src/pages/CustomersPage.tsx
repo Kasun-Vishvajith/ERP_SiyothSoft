@@ -70,7 +70,7 @@ export function CustomersPage() {
 
   return (
     <div className="page-section directory-layout">
-      <div className="section-heading"><div><span className="eyebrow">Directory</span><h2>Customers</h2><p className="form-help">Customers are kept separate from suppliers so their rules can grow independently.</p></div>{!formOpen && <button className="button button--primary" type="button" onClick={openNew}>New customer</button>}</div>
+      <div className="section-heading"><div><span className="eyebrow">Directory</span><h2>Customers</h2><p className="form-help">Contact details for the people you sell to.</p></div>{!formOpen && <button className="button button--primary" type="button" onClick={openNew}>New customer</button>}</div>
       {formOpen && <CustomerForm key={selected?.id ?? "new"} customer={selected} onCancel={closeForm} onSaved={saved} />}
       {notice && <div className="alert alert--success" role="status">{notice}</div>}
       {error && <div className="alert alert--error" role="alert">{error}</div>}

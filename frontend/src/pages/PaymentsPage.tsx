@@ -87,7 +87,7 @@ export function PaymentsPage({ invoices, purchases, payments, initialTarget, onS
   useEffect(() => {
     const controller = new AbortController();
     setLookupLoading(true);
-    request<PageResult<InvoiceSummary>>(`/invoices?page=${invoicePage}&size=${lookupPageSize}&status=UNPAID`, { signal: controller.signal })
+    request<PageResult<InvoiceSummary>>(`/invoices?page=${invoicePage}&size=${lookupPageSize}&status=UNPAID&documentStatus=ISSUED`, { signal: controller.signal })
       .then((result) => {
         setInvoiceOptions(result.content.map(toInvoice));
         setInvoiceTotalPages(result.totalPages);
@@ -201,11 +201,11 @@ export function PaymentsPage({ invoices, purchases, payments, initialTarget, onS
 
   return (
     <section className="page-section payments-page">
-      {submittedPayment && <div className="alert alert--success" role="status"><strong>Payment recorded.</strong> {submittedPayment.invoiceNumber} now has a refreshed balance. The request was accepted once.</div>}
+      {submittedPayment && <div className="alert alert--success" role="status"><strong>Payment recorded.</strong> {submittedPayment.invoiceNumber} now has a refreshed balance.</div>}
       <div className="payment-layout">
         <div className="form-card payment-form-card">
-          <div className="section-heading"><div><span className="eyebrow">Manual payment</span><h2>Record money already received</h2></div><span className="mint-icon" aria-hidden="true">✓</span></div>
-          <p className="form-help">This records an offline payment for an invoice or purchase. Stock is moved when the invoice or purchase is created, not when it is paid.</p>
+          <div className="section-heading"><div><span className="eyebrow">Manual payment</span><h2>Record a payment</h2></div><span className="mint-icon" aria-hidden="true">✓</span></div>
+          <p className="form-help">Record money received from a customer or paid to a supplier.</p>
           {errors.length > 0 && <div className="alert alert--error" role="alert"><strong>Payment could not be recorded</strong><ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul></div>}
           {lookupError && <div className="alert alert--error" role="alert">{lookupError}</div>}
           <form onSubmit={submit} noValidate>
@@ -213,10 +213,10 @@ export function PaymentsPage({ invoices, purchases, payments, initialTarget, onS
             <label className="field" htmlFor="payment-parent"><span>{paymentKind === "invoice" ? "Invoice" : "Purchase"} <em>*</em></span><select id="payment-parent" value={selectedParentId} onChange={(event) => selectParent(event.target.value)} disabled={lookupLoading}><option value="">{lookupLoading ? `Loading unpaid ${kindLabel}s…` : `Select an unpaid ${kindLabel}`}</option>{parentOptions.map((parent) => <option key={parent.id} value={parent.id}>{parent.number} · {paymentKind === "invoice" ? (parent as Invoice).customerName : (parent as Purchase).supplierName} · LKR {formatMoney(parent.balance)} due</option>)}</select></label>
             <LookupPager label={paymentKind === "invoice" ? "Invoice" : "Purchase"} page={lookupPage} totalPages={lookupTotalPages} disabled={lookupLoading} onPageChange={lookupPageChange} />
             {selectedParent && <div className="balance-card"><div><span>Document total</span><strong>LKR {formatMoney(selectedParent.total)}</strong></div><div><span>Paid so far</span><strong>LKR {formatMoney(selectedParent.amountPaid)}</strong></div><div className="balance-card__due"><span>Outstanding</span><strong>LKR {formatMoney(selectedParent.balance)}</strong></div></div>}
-            <div className="field-grid"><label className="field" htmlFor="payment-amount"><span>Amount <em>*</em></span><div className="input-with-prefix"><span>LKR</span><input id="payment-amount" type="number" min="0.01" step="0.01" value={draft.amount} onChange={(event) => setDraft({ ...draft, amount: event.target.value })} placeholder="0.00" /></div></label><label className="field" htmlFor="payment-date"><span>Paid on <em>*</em></span><input id="payment-date" type="date" value={draft.paidOn} onChange={(event) => setDraft({ ...draft, paidOn: event.target.value })} /></label></div>
+            <div className="field-grid"><label className="field" htmlFor="payment-amount"><span className="field-label-row"><span>Amount <em>*</em></span>{selectedParent && Number(selectedParent.balance) > 0 && <button className="fill-balance-button" type="button" onClick={() => setDraft((current) => ({ ...current, amount: Number(selectedParent.balance).toFixed(2) }))}>Pay full amount</button>}</span><div className="input-with-prefix"><span>LKR</span><input id="payment-amount" type="number" min="0.01" step="0.01" value={draft.amount} onChange={(event) => setDraft({ ...draft, amount: event.target.value })} placeholder="0.00" /></div></label><label className="field" htmlFor="payment-date"><span>Paid on <em>*</em></span><input id="payment-date" type="date" value={draft.paidOn} onChange={(event) => setDraft({ ...draft, paidOn: event.target.value })} /></label></div>
             <label className="field" htmlFor="payment-method"><span>Method <em>*</em></span><select id="payment-method" value={draft.method} onChange={(event) => setDraft({ ...draft, method: event.target.value as PaymentDraft["method"] })}><option value="BANK_TRANSFER">Bank transfer</option><option value="CASH">Cash</option></select></label>
             <label className="field" htmlFor="payment-reference"><span>Reference <small>Optional</small></span><input id="payment-reference" type="text" maxLength={200} value={draft.reference} onChange={(event) => setDraft({ ...draft, reference: event.target.value })} placeholder="Receipt or transfer reference" /></label>
-            <div className="payment-form-footer"><p className="request-note">Retry-safe request ID: <code>{requestId.slice(0, 12)}…</code></p><button className="button button--primary" type="submit" disabled={saving || !selectedParent}>{saving ? "Recording…" : "Record payment"}</button></div>
+            <div className="payment-form-footer"><button className="button button--primary" type="submit" disabled={saving || !selectedParent}>{saving ? "Recording…" : "Record payment"}</button></div>
           </form>
         </div>
 
@@ -231,7 +231,7 @@ export function PaymentsPage({ invoices, purchases, payments, initialTarget, onS
 }
 
 function mergeInvoices(loaded: Invoice[], fallback: Invoice[]): Invoice[] {
-  return mergeById([...loaded, ...fallback].filter((invoice) => invoice.paymentStatus !== "PAID"));
+  return mergeById([...loaded, ...fallback].filter((invoice) => invoice.documentStatus === "ISSUED" && invoice.paymentStatus !== "PAID"));
 }
 
 function mergePurchases(loaded: Purchase[], fallback: Purchase[]): Purchase[] {

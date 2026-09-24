@@ -4,7 +4,13 @@ import { EmptyState } from "../components/EmptyState";
 import { ProductForm } from "../components/ProductForm";
 import type { PageResult, Product } from "../types";
 
-export function ProductsPage() {
+type ProductsPageProps = {
+  openNewKey?: number;
+  embedded?: boolean;
+  onChanged?: () => void;
+};
+
+export function ProductsPage({ openNewKey = 0, embedded = false, onChanged }: ProductsPageProps) {
   const [page, setPage] = useState(0);
   const [data, setData] = useState<PageResult<Product> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +36,10 @@ export function ProductsPage() {
     return () => controller.abort();
   }, [page, reloadKey]);
 
+  useEffect(() => {
+    if (openNewKey > 0) openNew();
+  }, [openNewKey]);
+
   function closeForm() {
     setFormOpen(false);
     setSelected(undefined);
@@ -53,6 +63,7 @@ export function ProductsPage() {
     setPage(0);
     setNotice(`Product ${action} successfully.`);
     setReloadKey((value) => value + 1);
+    onChanged?.();
   }
 
   async function remove(product: Product) {
@@ -64,14 +75,15 @@ export function ProductsPage() {
       if (data && data.content.length === 1 && page > 0) setPage((value) => value - 1);
       setNotice("Product deleted successfully.");
       setReloadKey((value) => value + 1);
+      onChanged?.();
     } catch (caught: unknown) {
       setError(caught instanceof Error ? caught.message : "Could not delete product");
     }
   }
 
   return (
-    <div className="page-section product-layout">
-      <div className="section-heading"><div><span className="eyebrow">Catalogue</span><h2>Products</h2><p className="form-help">Selling prices are saved by the server and copied into future invoice snapshots.</p></div>{!formOpen && <button className="button button--primary" type="button" onClick={openNew}>New product</button>}</div>
+    <div className={`page-section product-layout ${embedded ? "product-layout--embedded" : ""}`}>
+      <div className="section-heading"><div>{!embedded && <><span className="eyebrow">Catalogue</span><h2>Products</h2><p className="form-help">Manage products, selling prices, and opening stock.</p></>}</div>{!formOpen && <button className="button button--primary" type="button" onClick={openNew}>New product</button>}</div>
       {formOpen && <ProductForm key={selected?.id ?? "new"} product={selected} onCancel={closeForm} onSaved={saved} />}
       {notice && <div className="alert alert--success" role="status">{notice}</div>}
       {error && <div className="alert alert--error" role="alert">{error}</div>}

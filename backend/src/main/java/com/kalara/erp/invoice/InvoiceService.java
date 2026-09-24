@@ -44,18 +44,24 @@ public class InvoiceService {
 
     @Transactional(readOnly = true)
     public PageResponse<InvoiceSummary> list(int page, int size) {
-        return list(page, size, "", "ALL");
+        return list(page, size, "", "ALL", "ALL");
     }
 
     @Transactional(readOnly = true)
     public PageResponse<InvoiceSummary> list(int page, int size, String query, String status) {
+        return list(page, size, query, status, "ALL");
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<InvoiceSummary> list(int page, int size, String query, String status, String documentStatus) {
         validatePage(page, size);
         if (!List.of("ALL", "PAID", "UNPAID", "PARTIALLY_PAID").contains(status)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown invoice payment status");
         }
+        InvoiceDocumentStatus documentFilter = parseDocumentStatus(documentStatus);
         var request = PageRequest.of(page, size, Sort.by("id").descending());
         String normalizedQuery = query == null ? "" : query.trim();
-        return PageResponse.from(invoiceRepository.search(normalizedQuery, status, request)
+        return PageResponse.from(invoiceRepository.search(normalizedQuery, status, documentFilter, request)
                 .map(invoice -> InvoiceSummary.from(invoice, paymentRepository.totalForInvoice(invoice.getId()))));
     }
 
@@ -71,10 +77,17 @@ public class InvoiceService {
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
         Map<Long, Product> products = lockProducts(request.items().stream().map(InvoiceRequest.Line::productId).toList());
         Calculation calculation = calculateLines(request.items(), products);
-        applyStockDelta(Map.of(), quantitiesByProduct(calculation.lines()), products);
+        InvoiceDocumentStatus documentStatus = requestedStatus(request);
+        if (documentStatus == InvoiceDocumentStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New invoices can only be saved as draft or issued");
+        }
         Invoice invoice = invoiceRepository.save(new Invoice(
                 "INV-" + UUID.randomUUID(), request.date(), customer.getId(), customer.getName(),
                 request.notes(), calculation.total()));
+        invoice.setDocumentStatus(documentStatus);
+        if (documentStatus == InvoiceDocumentStatus.ISSUED) {
+            applyStockDelta(Map.of(), quantitiesByProduct(calculation.lines()), products);
+        }
         saveItems(invoice.getId(), calculation.lines());
         return InvoiceResponse.from(invoice, itemRepository.findByInvoiceIdOrderByIdAsc(invoice.getId()),
                 paymentRepository.totalForInvoice(invoice.getId()));
@@ -83,6 +96,8 @@ public class InvoiceService {
     public InvoiceResponse update(Long id, InvoiceRequest request) {
         Invoice invoice = requireForUpdate(id);
         rejectPaid(invoice);
+        InvoiceDocumentStatus nextStatus = requestedStatus(request);
+        validateTransition(invoice, nextStatus);
         Customer customer = customerRepository.findById(request.customerId()).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
         List<InvoiceItem> previousItems = itemRepository.findByInvoiceIdOrderByIdAsc(id);
@@ -90,8 +105,13 @@ public class InvoiceService {
         productIds.addAll(previousItems.stream().map(InvoiceItem::getProductId).toList());
         Map<Long, Product> products = lockProducts(productIds);
         Calculation calculation = calculateLines(request.items(), products);
-        applyStockDelta(quantitiesByItems(previousItems), quantitiesByProduct(calculation.lines()), products);
+        Map<Long, Integer> previousStockImpact = invoice.getDocumentStatus() == InvoiceDocumentStatus.ISSUED
+                ? quantitiesByItems(previousItems) : Map.of();
+        Map<Long, Integer> nextStockImpact = nextStatus == InvoiceDocumentStatus.ISSUED
+                ? quantitiesByProduct(calculation.lines()) : Map.of();
+        applyStockDelta(previousStockImpact, nextStockImpact, products);
         invoice.update(request.date(), customer.getId(), customer.getName(), request.notes(), calculation.total());
+        invoice.setDocumentStatus(nextStatus);
         itemRepository.deleteByInvoiceId(id);
         itemRepository.flush();
         saveItems(id, calculation.lines());
@@ -102,11 +122,31 @@ public class InvoiceService {
     public void delete(Long id) {
         Invoice invoice = requireForUpdate(id);
         rejectPaid(invoice);
+        if (invoice.getDocumentStatus() == InvoiceDocumentStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cancelled invoices cannot be deleted");
+        }
         List<InvoiceItem> previousItems = itemRepository.findByInvoiceIdOrderByIdAsc(id);
         Map<Long, Product> products = lockProducts(previousItems.stream().map(InvoiceItem::getProductId).toList());
-        applyStockDelta(quantitiesByItems(previousItems), Map.of(), products);
+        if (invoice.getDocumentStatus() == InvoiceDocumentStatus.ISSUED) {
+            applyStockDelta(quantitiesByItems(previousItems), Map.of(), products);
+        }
         invoiceRepository.delete(invoice);
         invoiceRepository.flush();
+    }
+
+    public InvoiceResponse cancel(Long id) {
+        Invoice invoice = requireForUpdate(id);
+        rejectPaid(invoice);
+        if (invoice.getDocumentStatus() == InvoiceDocumentStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Invoice is already cancelled");
+        }
+        List<InvoiceItem> previousItems = itemRepository.findByInvoiceIdOrderByIdAsc(id);
+        Map<Long, Product> products = lockProducts(previousItems.stream().map(InvoiceItem::getProductId).toList());
+        if (invoice.getDocumentStatus() == InvoiceDocumentStatus.ISSUED) {
+            applyStockDelta(quantitiesByItems(previousItems), Map.of(), products);
+        }
+        invoice.setDocumentStatus(InvoiceDocumentStatus.CANCELLED);
+        return InvoiceResponse.from(invoice, previousItems, paymentRepository.totalForInvoice(id));
     }
 
     private Calculation calculateLines(List<InvoiceRequest.Line> requestedLines, Map<Long, Product> products) {
@@ -184,6 +224,32 @@ public class InvoiceService {
         if (paymentRepository.totalForInvoice(invoice.getId()).signum() > 0) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Paid or partially paid invoices cannot be edited or deleted");
+        }
+    }
+
+    private InvoiceDocumentStatus requestedStatus(InvoiceRequest request) {
+        return request.documentStatus() == null ? InvoiceDocumentStatus.ISSUED : request.documentStatus();
+    }
+
+    private void validateTransition(Invoice invoice, InvoiceDocumentStatus nextStatus) {
+        InvoiceDocumentStatus current = invoice.getDocumentStatus();
+        if (current == InvoiceDocumentStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cancelled invoices cannot be edited");
+        }
+        if (current == InvoiceDocumentStatus.ISSUED && nextStatus == InvoiceDocumentStatus.DRAFT) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Issued invoices cannot return to draft");
+        }
+        if (nextStatus == InvoiceDocumentStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Use the cancel action to cancel an invoice");
+        }
+    }
+
+    private InvoiceDocumentStatus parseDocumentStatus(String value) {
+        if (value == null || value.isBlank() || "ALL".equalsIgnoreCase(value)) return null;
+        try {
+            return InvoiceDocumentStatus.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException error) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown invoice document status");
         }
     }
 

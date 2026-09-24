@@ -28,8 +28,9 @@ public class InvoiceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "") String q,
-            @RequestParam(defaultValue = "ALL") String status) {
-        return service.list(page, size, q, status);
+            @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(defaultValue = "ALL") String documentStatus) {
+        return service.list(page, size, q, status, documentStatus);
     }
 
     @GetMapping("/{id}")
@@ -44,6 +45,11 @@ public class InvoiceController {
     @PutMapping("/{id}")
     public InvoiceResponse update(@PathVariable Long id, @Valid @RequestBody InvoiceRequest request) {
         return service.update(id, request);
+    }
+
+    @PostMapping("/{id}/cancel")
+    public InvoiceResponse cancel(@PathVariable Long id) {
+        return service.cancel(id);
     }
 
     @DeleteMapping("/{id}")

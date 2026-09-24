@@ -13,7 +13,8 @@ public record InvoiceSummary(
         String total,
         String amountPaid,
         String balance,
-        String paymentStatus) {
+        String paymentStatus,
+        String documentStatus) {
 
     public static InvoiceSummary from(Invoice invoice, BigDecimal amountPaid) {
         BigDecimal paid = Money.checked(amountPaid == null ? BigDecimal.ZERO : amountPaid);
@@ -21,7 +22,7 @@ public record InvoiceSummary(
         return new InvoiceSummary(
                 invoice.getId(), invoice.getNumber(), invoice.getDate(), invoice.getCustomerId(),
                 invoice.getCustomerName(), Money.text(invoice.getTotal()), Money.text(paid),
-                Money.text(balance), status(paid, balance));
+                Money.text(balance), status(paid, balance), invoice.getDocumentStatus().name());
     }
 
     private static String status(BigDecimal paid, BigDecimal balance) {

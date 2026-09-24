@@ -4,6 +4,7 @@ import com.kalara.erp.common.Money;
 import com.kalara.erp.common.PageResponse;
 import com.kalara.erp.invoice.Invoice;
 import com.kalara.erp.invoice.InvoiceRepository;
+import com.kalara.erp.invoice.InvoiceDocumentStatus;
 import com.kalara.erp.purchase.Purchase;
 import com.kalara.erp.purchase.PurchaseRepository;
 import java.math.BigDecimal;
@@ -42,6 +43,9 @@ public class PaymentService {
         if (hasInvoice) {
             Invoice invoice = invoiceRepository.findForUpdate(request.invoiceId()).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, "Invoice not found"));
+            if (invoice.getDocumentStatus() != InvoiceDocumentStatus.ISSUED) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Only issued invoices can receive payments");
+            }
             Payment existing = paymentRepository.findByRequestId(request.requestId()).orElse(null);
             if (existing != null) return existingResult(existing, request);
             return createForInvoice(invoice, request);

@@ -70,7 +70,7 @@ export function SuppliersPage() {
 
   return (
     <div className="page-section directory-layout">
-      <div className="section-heading"><div><span className="eyebrow">Directory</span><h2>Suppliers</h2><p className="form-help">Supplier records support purchase history and remain separate from customers.</p></div>{!formOpen && <button className="button button--primary" type="button" onClick={openNew}>New supplier</button>}</div>
+      <div className="section-heading"><div><span className="eyebrow">Directory</span><h2>Suppliers</h2><p className="form-help">Contact details for the businesses you buy from.</p></div>{!formOpen && <button className="button button--primary" type="button" onClick={openNew}>New supplier</button>}</div>
       {formOpen && <SupplierForm key={selected?.id ?? "new"} supplier={selected} onCancel={closeForm} onSaved={saved} />}
       {notice && <div className="alert alert--success" role="status">{notice}</div>}
       {error && <div className="alert alert--error" role="alert">{error}</div>}

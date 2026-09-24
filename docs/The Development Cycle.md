@@ -580,7 +580,7 @@ frontend  → Nginx and React build
 
 The backend waits for the database health check. PostgreSQL uses the external Docker volume `mini-erp-pgdata`. The external volume makes the data boundary clear and prevents a normal `docker compose down` from deleting records.
 
-The frontend is published only to `127.0.0.1:8088`, keeping the learning app local to the machine.
+The frontend is published only to `127.0.0.1:8188`, keeping the learning app local to the machine.
 
 `.env.example` documents `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `ERP_USERNAME` and `ERP_PASSWORD` without real credentials. Create an untracked `.env` from it and replace the placeholders.
 
@@ -720,7 +720,7 @@ docker compose --env-file .env up --build -d
 docker compose --env-file .env ps
 ```
 
-Open `http://localhost:8088` and use the username and password from `.env`.
+Open `http://localhost:8188` and use the username and password from `.env`.
 
 To stop without deleting data:
 

@@ -1,4 +1,14 @@
-target
+# Source-control and local configuration
 .git
+.gitignore
 .env
+.env.*
+
+# Build output
+target
+
+# Logs and local tooling
 *.log
+.idea
+.vscode
+*.iml

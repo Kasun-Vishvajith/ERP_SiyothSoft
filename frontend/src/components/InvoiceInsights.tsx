@@ -10,11 +10,11 @@ export function InvoiceInsights({ invoices }: { invoices: Invoice[] }) {
     <div className="insights-grid">
       <section className="insight-panel" aria-labelledby="sales-chart-title">
         <div className="insight-heading"><div><h3 id="sales-chart-title">Sales snapshot</h3><p>Invoice values on this page</p></div><span className="chart-legend"><i /> Invoice total</span></div>
-        {invoices.length ? <div className="sales-bars">{invoices.map((invoice) => <div className="sales-bar" key={invoice.id}>
+        {invoices.length && total > 0 ? <div className="sales-bars">{invoices.map((invoice) => <div className="sales-bar" key={invoice.id}>
           <div className="sales-bar__label"><strong>{invoice.customerName}</strong><span>{invoice.number}</span></div>
           <div className="sales-bar__track"><div style={{ width: `${Number(invoice.total) / maximum * 100}%` }} /></div>
           <span className="sales-bar__value">LKR {formatMoney(invoice.total)}</span>
-        </div>)}</div> : <p className="chart-empty">Your invoice activity will appear here.</p>}
+        </div>)}</div> : <p className="chart-empty">No issued sales.</p>}
         <div className="insight-footnote">Current page <span>{invoices.length} invoices</span></div>
       </section>
       <section className="insight-panel collection-panel" aria-labelledby="collection-title">

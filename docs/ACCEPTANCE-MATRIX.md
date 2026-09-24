@@ -25,7 +25,7 @@ This matrix records what is proven by source checks and the runtime evidence col
 | Backend | Insufficient stock | An invoice that would make stock negative is rejected without saving a partial invoice | Source returns HTTP 409 before the invoice is committed; runtime verification pending | Pending |
 | Data | Persistence | Restart keeps migrations and business records | PostgreSQL/backend restart preserved invoice count 1 and Flyway version 5 | Passed |
 | Containers | Compose shape | PostgreSQL, backend and frontend resolve with a named external volume | `docker compose --env-file .env.example config --quiet` passed | Passed |
-| Containers | Full startup/proxy | Login, API calls and SPA proxy work through `http://localhost:8088` | Compose built all images, PostgreSQL became healthy, backend started, and live HTTP smoke passed through Nginx | Passed |
+| Containers | Full startup/proxy | Login, API calls and SPA proxy work through `http://localhost:8188` | Compose built all images, PostgreSQL became healthy, backend started, and live HTTP smoke passed through Nginx | Passed |
 | Safety | Learning pack and ignore boundary | `ERP-Learning-Pack/` and `.gitignore` remain unchanged | `git check-ignore` confirms the learning pack rule | Passed |
 
 ## Runtime command sequence

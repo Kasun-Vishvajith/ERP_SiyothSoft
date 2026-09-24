@@ -1,6 +1,7 @@
 import type { ViewName } from "../types";
 
 const paths: Record<ViewName, string> = {
+  home: "M3 10.5 12 3l9 7.5 M5 9v12h14V9 M9 21v-7h6v7",
   inventory: "M3 7h18v14H3z M3 7l3-4h12l3 4 M9 11h6 M9 3v4 M15 3v4",
   products: "M12 3l9 5v9l-9 5-9-5V8z M3 8l9 5 9-5 M12 13v9 M7.5 5.5l9 5",
   invoices: "M6 3h12v18l-3-2-3 2-3-2-3 2z M9 7h6 M9 11h6 M9 15h3",

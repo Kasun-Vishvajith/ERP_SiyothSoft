@@ -2,6 +2,8 @@ package com.kalara.erp.invoice;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -34,12 +36,17 @@ public class Invoice {
     @Column(nullable = false, precision = 14, scale = 2)
     private BigDecimal total;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "document_status", nullable = false, length = 20)
+    private InvoiceDocumentStatus documentStatus;
+
     protected Invoice() {
     }
 
     public Invoice(String number, LocalDate date, Long customerId, String customerName, String notes, BigDecimal total) {
         this.number = number;
         update(date, customerId, customerName, notes, total);
+        this.documentStatus = InvoiceDocumentStatus.ISSUED;
     }
 
     public void update(LocalDate date, Long customerId, String customerName, String notes, BigDecimal total) {
@@ -57,4 +64,6 @@ public class Invoice {
     public String getCustomerName() { return customerName; }
     public String getNotes() { return notes; }
     public BigDecimal getTotal() { return total; }
+    public InvoiceDocumentStatus getDocumentStatus() { return documentStatus; }
+    public void setDocumentStatus(InvoiceDocumentStatus documentStatus) { this.documentStatus = documentStatus; }
 }

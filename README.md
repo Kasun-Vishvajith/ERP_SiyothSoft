@@ -35,7 +35,7 @@ The backend test source uses a separate `TEST_DB_URL`, `TEST_DB_USER` and `TEST_
 
 The backend source is under `backend/` and targets Java 21 with Spring Boot 4.1.1. Set `DB_URL`, `DB_USER`, `DB_PASSWORD`, `ERP_USERNAME` and `ERP_PASSWORD` when running it outside Compose, then verify `GET http://localhost:8080/api/health` returns `{"status":"ok"}`. Database, validation and feature dependencies are intentionally added one workbook stage at a time.
 
-The backend image uses an official Maven + Temurin builder because this checkout does not have Maven wrapper files; the frontend image uses Nginx to serve the build and proxy `/api/` to the `backend` service. Copy `.env.example` to an untracked `.env`, replace every placeholder, and never commit the real file. Flyway is wired through the Spring Boot Flyway starter and the PostgreSQL database module so the five migrations run during startup.
+The backend image uses an official Maven + Temurin builder because this checkout does not have Maven wrapper files; the frontend image uses Nginx to serve the build and proxy `/api/` to the `backend` service. Copy `.env.example` to an untracked `.env`, replace every placeholder, and never commit the real file. Flyway is wired through the Spring Boot Flyway starter and the PostgreSQL database module so the six migrations run during startup.
 
 Compose configuration can be checked without starting services:
 
@@ -43,7 +43,9 @@ Compose configuration can be checked without starting services:
 docker compose --env-file .env.example config --quiet
 ```
 
-Create the named volume once if needed, then run `docker compose up --build -d` and open `http://localhost:8088`. Do not use `down -v`; the `mini-erp-pgdata` external volume is the persistence boundary. The latest acceptance run restarted the database and backend and confirmed the invoice count was preserved.
+Create the named volume once if needed, then run `docker compose up --build -d` and open `http://localhost:8188`. Do not use `down -v`; the `mini-erp-pgdata` external volume is the persistence boundary. The latest acceptance run restarted the database and backend and confirmed the invoice count was preserved.
+
+On Windows, double-click `start-erp.bat` to validate Docker, create the `.env` file when needed, create the persistent volume, build/start the services and open the application automatically. Use `stop-erp.bat` to stop the services without deleting data. See [`docs/WINDOWS-LAUNCH.md`](docs/WINDOWS-LAUNCH.md) before the first run.
 
 ## UI direction
 

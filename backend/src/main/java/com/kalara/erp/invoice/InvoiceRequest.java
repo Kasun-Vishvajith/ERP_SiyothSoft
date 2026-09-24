@@ -14,7 +14,8 @@ public record InvoiceRequest(
         @NotNull @Positive Long customerId,
         @NotNull LocalDate date,
         @Size(max = 1000) String notes,
-        @NotEmpty @Size(max = 100) List<@NotNull @Valid Line> items) {
+        @NotEmpty @Size(max = 100) List<@NotNull @Valid Line> items,
+        InvoiceDocumentStatus documentStatus) {
 
     public record Line(
             @NotNull @Positive Long productId,

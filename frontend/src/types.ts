@@ -1,4 +1,4 @@
-export type ViewName = "inventory" | "products" | "invoices" | "payments" | "purchases" | "customers" | "suppliers";
+export type ViewName = "home" | "inventory" | "products" | "invoices" | "payments" | "purchases" | "customers" | "suppliers";
 
 export type Product = { id: number; name: string; price: string; stockCount: number };
 export type ProductInput = { name: string; price: string; stockCount: number };
@@ -20,6 +20,7 @@ export type PurchaseSummary = Omit<Purchase, "notes" | "items">;
 export type PurchaseDraftItem = { key: string; productId: number | ""; quantity: string; unitPrice: string };
 
 export type PaymentStatus = "PAID" | "PARTIALLY_PAID" | "UNPAID";
+export type InvoiceDocumentStatus = "DRAFT" | "ISSUED" | "CANCELLED";
 export type PaymentMethod = "CASH" | "BANK_TRANSFER";
 
 export type InvoiceItem = {
@@ -43,6 +44,7 @@ export type Invoice = {
   amountPaid: string;
   balance: string;
   paymentStatus: PaymentStatus;
+  documentStatus: InvoiceDocumentStatus;
 };
 export type InvoiceSummary = Omit<Invoice, "notes" | "items">;
 
@@ -57,6 +59,7 @@ export type InvoiceDraft = {
   date: string;
   notes: string;
   items: InvoiceDraftItem[];
+  documentStatus: InvoiceDocumentStatus;
 };
 
 export type Payment = {

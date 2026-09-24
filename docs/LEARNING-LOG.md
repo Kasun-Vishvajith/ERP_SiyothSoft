@@ -338,7 +338,7 @@ Add reproducible backend/frontend image definitions and keep the browser entry p
 
 ### Verification
 
-- Expected: backend and frontend images build, containers share a named network, PostgreSQL data uses a named volume and Nginx serves the workflow at host port 8088.
+- Expected: backend and frontend images build, containers share a named network, PostgreSQL data uses a named volume and Nginx serves the workflow at host port 8188.
 - Actual: Dockerfiles were added but image builds and persistence checks were not run because the application has not passed local Maven/database checks yet. No Docker resources were created.
 - Deviation: the guide assumes Maven wrapper files; this checkout has no wrapper and no JDK to generate one, so the backend builder uses the official Maven + Temurin image explicitly.
 
@@ -810,7 +810,7 @@ Run the application through its real PostgreSQL, Docker Compose and browser boun
 
 ### What changed
 
-Boot 4 Flyway startup was corrected by using the dedicated `spring-boot-starter-flyway` together with the PostgreSQL Flyway database module. Compose now starts PostgreSQL, applies all five migrations, starts the backend and serves the frontend through the Nginx API proxy.
+Boot 4 Flyway startup was corrected by using the dedicated `spring-boot-starter-flyway` together with the PostgreSQL Flyway database module. Compose starts PostgreSQL, applies the existing migrations, starts the backend and serves the frontend through the Nginx API proxy. The inventory change adds V6, which must be applied on the next startup.
 
 ### Verification
 
@@ -819,7 +819,7 @@ Boot 4 Flyway startup was corrected by using the dedicated `spring-boot-starter-
 - The live smoke result was: invoice total `51.00`, historical unit price `25.50` after the product changed to `30.00`, first payment `201`, same request ID `200`, paid edit `409`, invalid product price `400`.
 - Restarting the database and backend preserved the invoice count (`1` before and `1` after) and Flyway version `5`.
 - Browser verification passed at the live mobile viewport (`360px` form and drawer/card layout) and desktop viewport (`1366px` sidebar, table and wide form layout). A keyboard tab focus outline was also observed.
-- The frontend production build and Compose image build passed. The application is available at `http://localhost:8088` while the Compose stack is running.
+- The frontend production build and Compose image build passed. The application is available at `http://localhost:8188` while the Compose stack is running.
 
 ### Protected boundaries
 

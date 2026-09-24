@@ -11,9 +11,12 @@ This is the actual project inventory. Planned files are added only when the corr
 | `.gitattributes` | pre-existing | Keeps text line endings consistent. |
 | `.env.example` | implemented | Documents container environment keys without real credentials. |
 | `compose.yaml` | implemented, built and run | PostgreSQL, backend and Nginx services with a named external data volume. |
+| `start-erp.bat` | implemented | Windows launcher that validates Docker/.env, creates the persistent volume, builds the stack and opens the web app. |
+| `stop-erp.bat` | implemented | Windows stop script that preserves the database volume. |
 | `docs/FILE-MAP.md` | implemented | Explains the real files and their stage status. |
 | `docs/LEARNING-LOG.md` | implemented | Records the setup check and later learning-stage results. |
 | `docs/ACCEPTANCE-MATRIX.md` | implemented, runtime rows verified | Separates source evidence from the completed backend, container and browser checks. |
+| `docs/WINDOWS-LAUNCH.md` | implemented | First-run requirements, launcher usage, persistence warning and troubleshooting commands for Windows. |
 
 ## Frontend
 
@@ -121,7 +124,7 @@ This is the actual project inventory. Planned files are added only when the corr
 | `backend/src/main/java/com/kalara/erp/payment/PaymentService.java` | implemented and verified | Parent locking, duplicate handling and balance checks. |
 | `backend/src/main/java/com/kalara/erp/payment/PaymentController.java` | implemented and verified | `/api/payments` list/create endpoints. |
 
-The backend image was built with the container Maven/Temurin toolchain. The live Compose stack connected to PostgreSQL, applied migrations V1 through V5, served `/api/health`, and passed the isolated PostgreSQL test suite.
+The backend image was built with the container Maven/Temurin toolchain. The live Compose stack connected to PostgreSQL, applied migrations V1 through V5 before the inventory change; the new V6 migration is applied on the next startup, then `/api/health` and the isolated PostgreSQL test suite should be rerun.
 
 ## Generated verification output
 
