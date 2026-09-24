@@ -1,258 +1,91 @@
 # SiyothSoft ERP
 
-[![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111827)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![GitHub Actions](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
+**A clearer way to manage everyday business.**
 
-SiyothSoft ERP is a mobile-first business operations workspace for managing products, inventory, customers, suppliers, sales invoices, purchases and payments in one connected application.
+`Inventory` · `Sales` · `Invoices` · `Purchases` · `Payments` · `Customers` · `Suppliers` · `Small Business`
 
-It is designed for small-business workflows where a user needs to know what was bought, what was sold, what is in stock, who owes money and which records are already settled. The system keeps the browser interface responsive while the Spring Boot backend owns validation, calculations, security, transactions and persistence.
+## What is SiyothSoft ERP?
 
-## What this ERP software does
+SiyothSoft ERP is a simple business workspace that brings daily sales, purchases, stock and payment records together in one place.
 
-- Maintains a product catalogue with prices and stock counts.
-- Records purchases from suppliers and increases inventory.
-- Creates sales invoices using historical product-price snapshots.
-- Deducts stock when invoices are created and prevents negative inventory.
-- Tracks customers, suppliers, invoice balances and purchase balances.
-- Records manual payments against either invoices or purchases.
-- Locks paid or partially paid documents from unsafe edits or deletion.
-- Provides authenticated sessions, CSRF protection and safe API errors.
-- Works as a desktop table-based workspace and a compact mobile card interface.
+It helps a business answer everyday questions quickly:
 
-This project focuses on core operational ERP flows. It does not currently aim to replace a complete accounting, payroll, tax or payment-gateway platform.
+- What products do we have available?
+- What did we buy from suppliers?
+- What did we sell to customers?
+- Which invoices have been paid?
+- Who still has an outstanding balance?
+- Which products need attention?
 
-## Main modules
+The goal is to make business records easier to understand and easier to act on.
 
-| Module | Purpose |
+## Who is it for?
+
+SiyothSoft ERP is designed for small businesses, shops, distributors and growing teams that want a clear view of their daily operations without spreading information across notebooks and separate files.
+
+It is especially useful for a business that needs to connect its product list, stock movement, customer sales, supplier purchases and incoming payments.
+
+## What can you do with it?
+
+- Keep a list of products and their prices.
+- Record how many items are available.
+- Add purchases from suppliers.
+- Create sales invoices for customers.
+- Follow paid, partly paid and unpaid invoices.
+- Record payments received from customers.
+- See balances that still need to be collected.
+- Keep customer and supplier details together.
+- Protect paid records from accidental changes.
+- Use the workspace comfortably on a computer or phone.
+
+## Main areas
+
+| Area | What it helps you manage |
 | --- | --- |
-| Dashboard | Gives a quick view of sales, balances, payment collection and invoice activity. |
-| Inventory | Shows stock levels and supports opening or corrected counts. |
-| Products | Manages products, prices, quantities and catalogue records. |
-| Invoices | Creates, searches, filters and reviews sales invoices. |
-| Purchases | Records supplier purchases and updates stock. |
-| Payments | Records payments and shows payment history for invoices and purchases. |
-| Customers | Maintains customer records used by sales invoices. |
-| Suppliers | Maintains supplier records used by purchases. |
+| Home | A quick view of sales, money received, unpaid amounts and products needing attention. |
+| Products | Product names, prices and available quantities. |
+| Inventory | Current stock and quantity corrections. |
+| Invoices | Customer sales, invoice totals, balances and payment status. |
+| Purchases | Supplier purchases and the items added to stock. |
+| Payments | Money received and payment history. |
+| Customers | Customer names and contact details. |
+| Suppliers | Supplier names and contact details. |
+
+## A typical day
+
+1. Add products and record the opening quantities.
+2. Record a purchase when new goods arrive.
+3. Create an invoice when goods are sold.
+4. Check the remaining stock and unpaid balances.
+5. Record the customer payment when it arrives.
+6. Use the Home page to see what needs attention next.
 
 ## Screenshots
 
-### Desktop invoice workspace
+### Business overview on a computer
 
-![SiyothSoft ERP desktop invoice workspace](docs/evidence/ui-redesign/desktop.png)
+![SiyothSoft ERP business overview on desktop](docs/evidence/ui-redesign/desktop.png)
 
-### Responsive mobile workspace
+### Business overview on a phone
 
-![SiyothSoft ERP mobile invoice workspace](docs/evidence/ui-redesign/mobile.png)
+![SiyothSoft ERP business overview on mobile](docs/evidence/ui-redesign/mobile.png)
 
-### Secure sign-in screen
+### Welcome screen
 
-![SiyothSoft ERP sign-in screen](docs/evidence/ui-redesign/login.png)
+![SiyothSoft ERP welcome screen](docs/evidence/ui-redesign/login.png)
 
-## Technology stack
+## Why it is useful
 
-- **Frontend:** React, TypeScript, Vite and Sass.
-- **Backend:** Java 21, Spring Boot, Spring MVC, Spring Security and Spring Data JPA.
-- **Database:** PostgreSQL 17 with Flyway migrations.
-- **Web server:** Nginx serves the compiled React application and reverse-proxies `/api/` to Spring Boot.
-- **Packaging:** Multi-stage Dockerfiles and Docker Compose.
-- **Automation:** GitHub Actions builds and publishes application images to GitHub Container Registry.
-
-## Application architecture
+SiyothSoft ERP keeps the important parts of a small business connected:
 
 ```text
-Browser
-   ↓
-Nginx frontend container
-   ├── React static files
-   └── /api/* reverse proxy
-          ↓
-Spring Boot backend container
-          ↓
-PostgreSQL database container
-          ↓
-Persistent Docker volume
+Products → Purchases → Stock → Sales → Invoices → Payments
 ```
 
-The browser uses same-origin `/api/...` requests. Nginx forwards those requests to the internal `backend` service, so the backend and database do not need to be exposed directly to the host.
+When a purchase is recorded, stock increases. When an invoice is created, stock decreases. When a payment is received, the outstanding balance becomes easier to follow.
 
-## Project status
+## Current focus
 
-The responsive UI is API-backed. The Compose stack has been built and exercised with PostgreSQL, the frontend production build passes, and the backend integration suite uses an isolated test database. Runtime checks cover authentication, CSRF, invoice snapshots, payment locking, persistence and responsive layouts. See [`docs/LEARNING-LOG.md`](docs/LEARNING-LOG.md) for the chronological record, [`docs/FILE-MAP.md`](docs/FILE-MAP.md) for the file inventory and [`docs/ACCEPTANCE-MATRIX.md`](docs/ACCEPTANCE-MATRIX.md) for verification evidence.
+This project focuses on the everyday operating side of a business. It is not intended to replace a full accounting, payroll, tax or card-payment service.
 
-Generated `node_modules/`, `dist/`, `.npm-cache/` and `target/` folders are excluded from Git and Docker build contexts. `ERP-Learning-Pack/` contains the learning workbook and is intentionally unchanged. Local `.env` files, generated output, logs, IDE files and export archives are excluded by the root `.gitignore`.
-
-## Frontend
-
-From `frontend/`:
-
-```powershell
-npm install
-npm run dev
-```
-
-Open `http://localhost:5173`. The Vite proxy is configured for the backend at `127.0.0.1:8080`. The app checks `/api/me` on startup and shows the session login when the API reports 401. Set `ERP_USERNAME` and `ERP_PASSWORD` in the backend terminal; do not commit them.
-
-Run the production checks with:
-
-```powershell
-npm run build
-```
-
-The backend test source uses a separate `TEST_DB_URL`, `TEST_DB_USER` and `TEST_DB_PASSWORD` profile. The isolated PostgreSQL test run passed all 13 tests. This checkout has no Maven wrapper; the Dockerfile uses an official Maven builder image.
-
-## Backend
-
-The backend source is under `backend/` and targets Java 21 with Spring Boot 4.1.1. Set `DB_URL`, `DB_USER`, `DB_PASSWORD`, `ERP_USERNAME` and `ERP_PASSWORD` when running it outside Compose, then verify `GET http://localhost:8080/api/health` returns `{"status":"ok"}`. Database, validation and feature dependencies are intentionally added one workbook stage at a time.
-
-The backend image uses an official Maven + Temurin builder because this checkout does not have Maven wrapper files; the frontend image uses Nginx to serve the build and proxy `/api/` to the `backend` service. Copy `.env.example` to an untracked `.env`, replace every placeholder, and never commit the real file. Flyway is wired through the Spring Boot Flyway starter and the PostgreSQL database module so the seven migrations run during startup.
-
-Compose configuration can be checked without starting services:
-
-```powershell
-docker compose --env-file .env.example config --quiet
-```
-
-Create the named volume once if needed, then run `docker compose up --build -d` and open `http://localhost:8188`. Do not use `down -v`; the `mini-erp-pgdata` external volume is the persistence boundary. The latest acceptance run restarted the database and backend and confirmed the invoice count was preserved.
-
-On Windows, double-click `start-erp.bat` to validate Docker, create the `.env` file when needed, create the persistent volume, build/start the services and open the application automatically. Use `stop-erp.bat` to stop the services without deleting data. See [`docs/WINDOWS-LAUNCH.md`](docs/WINDOWS-LAUNCH.md) before the first run.
-
-## GitHub Actions and container publishing
-
-GitHub Actions can build the backend and frontend images on every push to `main` and publish them to GitHub Container Registry (GHCR). The intended images are:
-
-```text
-ghcr.io/kasun-vishvajith/erp-siyothsoft-backend
-ghcr.io/kasun-vishvajith/erp-siyothsoft-frontend
-```
-
-The workflow should use the repository `GITHUB_TOKEN` with `packages: write` permission. Pull requests should build the images for validation but should not publish them. Production deployments should use immutable commit or digest tags instead of relying only on `latest`. The [GitHub Docker publishing guide](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images) documents the official login, metadata and build-push actions.
-
-Do not put `.env`, database passwords or ERP credentials into an image or workflow file. Keep runtime configuration on the deployment server or in the deployment platform's secret store. The PostgreSQL image is pulled from the official registry; it is not part of the custom application image build.
-
-## Kubernetes readiness and deployment path
-
-Kubernetes is optional for this small single-server ERP. Docker Compose remains the simpler deployment choice. Kubernetes becomes useful when the system needs multiple nodes, automatic rescheduling, rolling updates or multiple application replicas.
-
-Before moving from Compose to Kubernetes:
-
-1. Publish the backend and frontend images to GHCR.
-2. Decide whether PostgreSQL will use a managed database service. Running PostgreSQL in Kubernetes requires a StatefulSet, persistent storage, backups and restore testing.
-3. Move passwords to Kubernetes Secrets and non-sensitive settings to ConfigMaps.
-4. Add a database-aware readiness endpoint. The current `/api/health` endpoint is intentionally a process check and does not claim that PostgreSQL is ready.
-5. Decide how sessions will work with more than one backend replica. This application currently uses server-side sessions, so scaling the backend requires shared sessions such as Spring Session with Redis, or a temporary single backend replica.
-6. Add backend and frontend Deployments, internal Services, resource limits and liveness/readiness/startup probes.
-7. Add a Gateway API implementation or an Ingress controller for the public hostname, HTTPS and external routing. Kubernetes recommends Gateway API for new routing work; the Ingress API is stable but frozen.
-
-The Kubernetes resource layout would be approximately:
-
-```text
-k8s/
-├── namespace.yaml
-├── backend-deployment.yaml
-├── backend-service.yaml
-├── frontend-deployment.yaml
-├── frontend-service.yaml
-├── configmap.yaml
-├── secret-template.yaml
-├── gateway.yaml
-└── httproute.yaml
-```
-
-If PostgreSQL is self-hosted in the cluster, add a database StatefulSet and a PersistentVolumeClaim. Keep real Secret values out of Git. See the Kubernetes documentation for [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), [Services](https://kubernetes.io/docs/concepts/services-networking/service/), [ConfigMaps and Secrets](https://kubernetes.io/docs/concepts/configuration/configmap/), [container probes](https://kubernetes.io/docs/concepts/workloads/pods/probes/), [StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) and [Gateway API](https://kubernetes.io/docs/concepts/services-networking/gateway/).
-
-## UI direction
-
-- Mobile uses a hamburger drawer and compact invoice/payment cards.
-- Desktop uses a persistent sidebar and data tables.
-- Forms are single-column on small screens and use a two-column detail grid when space allows.
-- Invoice and purchase lookups are paginated in the form instead of silently limiting choices to the first 100 records.
-- Invoice list search, status filtering and page boundaries are evaluated by the backend; the browser requests one page at a time.
-- Desktop tables switch to compact record cards on smaller screens for invoices, purchases and payment history.
-- Colors use cool off-white surfaces, white cards, muted cornflower-blue actions, mint payment states and lilac purchase accents.
-- Invoice-form and purchase-form totals are previews only; backend services calculate authoritative totals and snapshot values. Invoice summaries/detail/delete and payment history/submission use API calls. No mock record set is retained in the frontend.
-- Any invoice or purchase with a recorded payment is locked from editing/deletion by the backend rule.
-- Manual payments use request IDs and parent-row locks; there is no payment gateway. Purchases add stock and invoices deduct stock transactionally, while the payment form calls the API for either an invoice or purchase, pages unpaid choices independently and refreshes its lookup after a successful payment.
-- Session cookies and CSRF are framework-managed; the frontend keeps only the CSRF token in memory and returns to login when a later session request receives 401.
-
-## Frontend file map
-
-| File | Purpose |
-| --- | --- |
-| `frontend/package.json` | Vite, React, TypeScript and Sass scripts/dependencies. |
-| `frontend/tsconfig.json` | TypeScript project references. |
-| `frontend/tsconfig.app.json` | Strict TypeScript settings for React source. |
-| `frontend/tsconfig.node.json` | TypeScript settings for Vite configuration. |
-| `frontend/vite.config.ts` | React plugin, local dev port and future API proxy. |
-| `frontend/index.html` | Browser document and React mount point. |
-| `frontend/src/main.tsx` | Mounts the app with React StrictMode. |
-| `frontend/src/App.tsx` | Holds auth state, navigation, current invoice/payment context and screen transitions. |
-| `frontend/src/api.ts` | Same-origin session requests, CSRF handling and typed HTTP status errors. |
-| `frontend/src/types.ts` | Shared invoice, payment, lookup and navigation types. |
-| `frontend/src/utils.ts` | Shared money formatting and payment-status labels. |
-| `frontend/src/styles.scss` | Mobile-first layout, responsive breakpoints, colors, states and accessibility focus styles. |
-| `frontend/src/components/Sidebar.tsx` | Desktop sidebar and mobile navigation drawer. |
-| `frontend/src/components/StatusBadge.tsx` | Consistent invoice payment-state badges. |
-| `frontend/src/components/EmptyState.tsx` | Reusable empty result state with a clear next action. |
-| `frontend/src/components/InvoiceForm.tsx` | API-backed invoice form, dynamic lines, preview total and payment-lock messaging. |
-| `frontend/src/components/ProductForm.tsx` | Server-backed product create/edit form with preserved input on errors. |
-| `frontend/src/components/CustomerForm.tsx` | Explicit customer create/edit form with optional contact fields. |
-| `frontend/src/components/SupplierForm.tsx` | Explicit supplier create/edit form with optional contact fields. |
-| `frontend/src/components/LookupPager.tsx` | Previous/next control for paginated form lookups. |
-| `frontend/src/components/PurchaseForm.tsx` | Purchase create/edit form with supplier/product lookups and explicit unit costs. |
-| `frontend/src/pages/InvoicesPage.tsx` | Server-backed searchable/status-filtered invoice list with pagination, loading, error, empty, success and responsive card/table views. |
-| `frontend/src/pages/ProductsPage.tsx` | Product table/card list with loading, empty, error, success, pagination and CRUD states. |
-| `frontend/src/pages/CustomersPage.tsx` | Customer table/card list, pagination, CRUD actions, success notices and referenced-record errors. |
-| `frontend/src/pages/SuppliersPage.tsx` | Supplier table/card list, pagination, CRUD actions, success notices and referenced-record errors. |
-| `frontend/src/pages/PurchasesPage.tsx` | Responsive purchase list, server-backed CRUD, purchase payment action and paid-record locking. |
-| `frontend/src/pages/PaymentsPage.tsx` | API-backed manual payment form for invoices and purchases, server errors, retry-safe request ID and paginated payment history. |
-| `frontend/src/pages/LoginPage.tsx` | Username/password login form with accessible error and busy states. |
-| `frontend/Dockerfile` | Multi-stage Vite build and Nginx runtime image. |
-| `frontend/nginx.conf` | SPA fallback and same-origin backend proxy. |
-| `frontend/.dockerignore` | Frontend Docker build-context exclusions. |
-| `backend/pom.xml` | Pinned Spring Boot Maven project, persistence dependencies and Spring Security. |
-| `backend/Dockerfile` | Multi-stage Maven build and non-root Java runtime image. |
-| `backend/.dockerignore` | Backend Docker build-context exclusions. |
-| `compose.yaml` | PostgreSQL, backend and Nginx services with an external named data volume. |
-| `backend/src/main/java/com/kalara/erp/ErpApplication.java` | Spring application entry point. |
-| `backend/src/main/java/com/kalara/erp/health/HealthController.java` | Process-reachability endpoint at `/api/health`. |
-| `backend/src/main/resources/application.properties` | Local backend binding and port configuration. |
-| `backend/src/main/java/com/kalara/erp/security/SecurityConfig.java` | Environment-backed learning user, session login/logout and CSRF protection. |
-| `backend/src/main/java/com/kalara/erp/security/AuthController.java` | CSRF bootstrap and authenticated `/api/me` endpoint. |
-| `backend/src/test/resources/application-test.properties` | Separate test-database and test-credential configuration. |
-| `backend/src/test/java/com/kalara/erp/common/MoneyTest.java` | Exact money-rule unit tests. |
-| `backend/src/test/java/com/kalara/erp/security/SecurityIntegrationTest.java` | MockMvc authentication and CSRF checks. |
-| `backend/src/test/java/com/kalara/erp/flow/BusinessFlowIntegrationTest.java` | Invoice snapshot/rollback, separate invoice/purchase settlement, payment idempotency and concurrent-lock integration checks. |
-| `backend/src/main/resources/db/migration/V1__create_products.sql` | First Flyway products-table migration. |
-| `backend/src/main/java/com/kalara/erp/common/PageResponse.java` | Stable pagination response shape. |
-| `backend/src/main/java/com/kalara/erp/common/ApiExceptionHandler.java` | Safe API error responses. |
-| `backend/src/main/java/com/kalara/erp/product/Product.java` | Products-table entity mapping. |
-| `backend/src/main/java/com/kalara/erp/product/ProductRequest.java` | Validated product input. |
-| `backend/src/main/java/com/kalara/erp/product/ProductResponse.java` | Product API output with decimal-string money. |
-| `backend/src/main/java/com/kalara/erp/product/ProductRepository.java` | Product persistence and pagination access. |
-| `backend/src/main/java/com/kalara/erp/product/ProductService.java` | Product business rules and transactions. |
-| `backend/src/main/java/com/kalara/erp/product/ProductController.java` | `/api/products` HTTP endpoints. |
-| `backend/src/main/resources/db/migration/V2__create_parties.sql` | Customers and suppliers migration. |
-| `backend/src/main/java/com/kalara/erp/customer/*` | Explicit customer entity, DTO, repository, service and controller. |
-| `backend/src/main/java/com/kalara/erp/supplier/*` | Explicit supplier entity, DTO, repository, service and controller. |
-| `backend/src/main/resources/db/migration/V3__create_sales_invoices.sql` | Invoice header/line schema, snapshots, constraints and indexes. |
-| `backend/src/main/java/com/kalara/erp/common/Money.java` | Exact backend money calculations and range checks. |
-| `backend/src/main/java/com/kalara/erp/invoice/*` | Sales invoice entities, DTOs, repositories, transaction service and controller. |
-| `backend/src/main/resources/db/migration/V4__create_purchases.sql` | Purchase header/line schema with supplier/product constraints. |
-| `backend/src/main/java/com/kalara/erp/purchase/*` | Purchase entities, DTOs, repositories, cost calculations, service and controller. |
-
-## Project documentation
-
-| File | Purpose |
-| --- | --- |
-| `docs/ACCEPTANCE-MATRIX.md` | Requirement-by-requirement evidence, runtime boundaries and the final verification command sequence. |
-| `docs/LEARNING-LOG.md` | Chronological implementation notes, source decisions and verification results. |
-| `docs/FILE-MAP.md` | Expanded inventory of the learning-pack-derived implementation files. |
-
-## Next small implementation step
-
-Keep future changes small, update the learning log and acceptance matrix after each stage, and rerun the relevant Compose/API/browser checks before calling a later change complete.
+The workspace is being developed as a practical, learning-first business application with a clean visual style and a focus on clear records.
