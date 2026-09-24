@@ -8,9 +8,9 @@ The responsive UI is API-backed. It includes the application shell, product/cust
 
 Runtime status: Docker Desktop's Linux engine is available and the Compose stack has been built and exercised with PostgreSQL. The backend integration suite passes against an isolated test database, and live HTTP/browser checks cover authentication, CSRF, snapshots, payment locking, persistence and responsive layouts. The Android Studio JDK 25.0.3 remains available off PATH for compilation; the container build uses Java 21. See [`docs/LEARNING-LOG.md`](docs/LEARNING-LOG.md) for the chronological record and [`docs/FILE-MAP.md`](docs/FILE-MAP.md) for the real file inventory.
 
-The latest source audit confirms there are no retained `node_modules/`, `dist/`, `.npm-cache/` or `target/` folders. The learning pack and existing `.gitignore` remain unchanged. The requirement-by-requirement verification boundary is recorded in [`docs/ACCEPTANCE-MATRIX.md`](docs/ACCEPTANCE-MATRIX.md).
+Generated `node_modules/`, `dist/`, `.npm-cache/` and `target/` folders are excluded from Git and Docker build contexts. The requirement-by-requirement verification boundary is recorded in [`docs/ACCEPTANCE-MATRIX.md`](docs/ACCEPTANCE-MATRIX.md).
 
-`ERP-Learning-Pack/` contains the learning workbook and is intentionally unchanged. The root `.gitignore` is also intentionally unchanged.
+`ERP-Learning-Pack/` contains the learning workbook and is intentionally unchanged. Local `.env` files, generated output, logs, IDE files and export archives are excluded by the root `.gitignore`.
 
 ## Frontend
 
@@ -35,7 +35,7 @@ The backend test source uses a separate `TEST_DB_URL`, `TEST_DB_USER` and `TEST_
 
 The backend source is under `backend/` and targets Java 21 with Spring Boot 4.1.1. Set `DB_URL`, `DB_USER`, `DB_PASSWORD`, `ERP_USERNAME` and `ERP_PASSWORD` when running it outside Compose, then verify `GET http://localhost:8080/api/health` returns `{"status":"ok"}`. Database, validation and feature dependencies are intentionally added one workbook stage at a time.
 
-The backend image uses an official Maven + Temurin builder because this checkout does not have Maven wrapper files; the frontend image uses Nginx to serve the build and proxy `/api/` to the `backend` service. Copy `.env.example` to an untracked `.env`, replace every placeholder, and never commit the real file. Flyway is wired through the Spring Boot Flyway starter and the PostgreSQL database module so the six migrations run during startup.
+The backend image uses an official Maven + Temurin builder because this checkout does not have Maven wrapper files; the frontend image uses Nginx to serve the build and proxy `/api/` to the `backend` service. Copy `.env.example` to an untracked `.env`, replace every placeholder, and never commit the real file. Flyway is wired through the Spring Boot Flyway starter and the PostgreSQL database module so the seven migrations run during startup.
 
 Compose configuration can be checked without starting services:
 
@@ -46,6 +46,50 @@ docker compose --env-file .env.example config --quiet
 Create the named volume once if needed, then run `docker compose up --build -d` and open `http://localhost:8188`. Do not use `down -v`; the `mini-erp-pgdata` external volume is the persistence boundary. The latest acceptance run restarted the database and backend and confirmed the invoice count was preserved.
 
 On Windows, double-click `start-erp.bat` to validate Docker, create the `.env` file when needed, create the persistent volume, build/start the services and open the application automatically. Use `stop-erp.bat` to stop the services without deleting data. See [`docs/WINDOWS-LAUNCH.md`](docs/WINDOWS-LAUNCH.md) before the first run.
+
+## GitHub Actions and container publishing
+
+GitHub Actions can build the backend and frontend images on every push to `main` and publish them to GitHub Container Registry (GHCR). The intended images are:
+
+```text
+ghcr.io/kasun-vishvajith/erp-siyothsoft-backend
+ghcr.io/kasun-vishvajith/erp-siyothsoft-frontend
+```
+
+The workflow should use the repository `GITHUB_TOKEN` with `packages: write` permission. Pull requests should build the images for validation but should not publish them. Production deployments should use immutable commit or digest tags instead of relying only on `latest`. The [GitHub Docker publishing guide](https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images) documents the official login, metadata and build-push actions.
+
+Do not put `.env`, database passwords or ERP credentials into an image or workflow file. Keep runtime configuration on the deployment server or in the deployment platform's secret store. The PostgreSQL image is pulled from the official registry; it is not part of the custom application image build.
+
+## Kubernetes readiness and deployment path
+
+Kubernetes is optional for this small single-server ERP. Docker Compose remains the simpler deployment choice. Kubernetes becomes useful when the system needs multiple nodes, automatic rescheduling, rolling updates or multiple application replicas.
+
+Before moving from Compose to Kubernetes:
+
+1. Publish the backend and frontend images to GHCR.
+2. Decide whether PostgreSQL will use a managed database service. Running PostgreSQL in Kubernetes requires a StatefulSet, persistent storage, backups and restore testing.
+3. Move passwords to Kubernetes Secrets and non-sensitive settings to ConfigMaps.
+4. Add a database-aware readiness endpoint. The current `/api/health` endpoint is intentionally a process check and does not claim that PostgreSQL is ready.
+5. Decide how sessions will work with more than one backend replica. This application currently uses server-side sessions, so scaling the backend requires shared sessions such as Spring Session with Redis, or a temporary single backend replica.
+6. Add backend and frontend Deployments, internal Services, resource limits and liveness/readiness/startup probes.
+7. Add a Gateway API implementation or an Ingress controller for the public hostname, HTTPS and external routing. Kubernetes recommends Gateway API for new routing work; the Ingress API is stable but frozen.
+
+The Kubernetes resource layout would be approximately:
+
+```text
+k8s/
+├── namespace.yaml
+├── backend-deployment.yaml
+├── backend-service.yaml
+├── frontend-deployment.yaml
+├── frontend-service.yaml
+├── configmap.yaml
+├── secret-template.yaml
+├── gateway.yaml
+└── httproute.yaml
+```
+
+If PostgreSQL is self-hosted in the cluster, add a database StatefulSet and a PersistentVolumeClaim. Keep real Secret values out of Git. See the Kubernetes documentation for [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/), [Services](https://kubernetes.io/docs/concepts/services-networking/service/), [ConfigMaps and Secrets](https://kubernetes.io/docs/concepts/configuration/configmap/), [container probes](https://kubernetes.io/docs/concepts/workloads/pods/probes/), [StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) and [Gateway API](https://kubernetes.io/docs/concepts/services-networking/gateway/).
 
 ## UI direction
 
