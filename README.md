@@ -1,16 +1,90 @@
-# ERP - 2026-09-18
+# SiyothSoft ERP
 
-A small, mobile-first ERP application to practise full-stack development.
+[![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111827)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![GitHub Actions](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 
-## Current status
+SiyothSoft ERP is a mobile-first business operations workspace for managing products, inventory, customers, suppliers, sales invoices, purchases and payments in one connected application.
 
-The responsive UI is API-backed. It includes the application shell, product/customer/supplier directories, invoice and purchase forms/lists, and manual payments. The backend source contains the matching resources, validation, sessions and database migrations.
+It is designed for small-business workflows where a user needs to know what was bought, what was sold, what is in stock, who owes money and which records are already settled. The system keeps the browser interface responsive while the Spring Boot backend owns validation, calculations, security, transactions and persistence.
 
-Runtime status: Docker Desktop's Linux engine is available and the Compose stack has been built and exercised with PostgreSQL. The backend integration suite passes against an isolated test database, and live HTTP/browser checks cover authentication, CSRF, snapshots, payment locking, persistence and responsive layouts. The Android Studio JDK 25.0.3 remains available off PATH for compilation; the container build uses Java 21. See [`docs/LEARNING-LOG.md`](docs/LEARNING-LOG.md) for the chronological record and [`docs/FILE-MAP.md`](docs/FILE-MAP.md) for the real file inventory.
+## What this ERP software does
 
-Generated `node_modules/`, `dist/`, `.npm-cache/` and `target/` folders are excluded from Git and Docker build contexts. The requirement-by-requirement verification boundary is recorded in [`docs/ACCEPTANCE-MATRIX.md`](docs/ACCEPTANCE-MATRIX.md).
+- Maintains a product catalogue with prices and stock counts.
+- Records purchases from suppliers and increases inventory.
+- Creates sales invoices using historical product-price snapshots.
+- Deducts stock when invoices are created and prevents negative inventory.
+- Tracks customers, suppliers, invoice balances and purchase balances.
+- Records manual payments against either invoices or purchases.
+- Locks paid or partially paid documents from unsafe edits or deletion.
+- Provides authenticated sessions, CSRF protection and safe API errors.
+- Works as a desktop table-based workspace and a compact mobile card interface.
 
-`ERP-Learning-Pack/` contains the learning workbook and is intentionally unchanged. Local `.env` files, generated output, logs, IDE files and export archives are excluded by the root `.gitignore`.
+This project focuses on core operational ERP flows. It does not currently aim to replace a complete accounting, payroll, tax or payment-gateway platform.
+
+## Main modules
+
+| Module | Purpose |
+| --- | --- |
+| Dashboard | Gives a quick view of sales, balances, payment collection and invoice activity. |
+| Inventory | Shows stock levels and supports opening or corrected counts. |
+| Products | Manages products, prices, quantities and catalogue records. |
+| Invoices | Creates, searches, filters and reviews sales invoices. |
+| Purchases | Records supplier purchases and updates stock. |
+| Payments | Records payments and shows payment history for invoices and purchases. |
+| Customers | Maintains customer records used by sales invoices. |
+| Suppliers | Maintains supplier records used by purchases. |
+
+## Screenshots
+
+### Desktop invoice workspace
+
+![SiyothSoft ERP desktop invoice workspace](docs/evidence/ui-redesign/desktop.png)
+
+### Responsive mobile workspace
+
+![SiyothSoft ERP mobile invoice workspace](docs/evidence/ui-redesign/mobile.png)
+
+### Secure sign-in screen
+
+![SiyothSoft ERP sign-in screen](docs/evidence/ui-redesign/login.png)
+
+## Technology stack
+
+- **Frontend:** React, TypeScript, Vite and Sass.
+- **Backend:** Java 21, Spring Boot, Spring MVC, Spring Security and Spring Data JPA.
+- **Database:** PostgreSQL 17 with Flyway migrations.
+- **Web server:** Nginx serves the compiled React application and reverse-proxies `/api/` to Spring Boot.
+- **Packaging:** Multi-stage Dockerfiles and Docker Compose.
+- **Automation:** GitHub Actions builds and publishes application images to GitHub Container Registry.
+
+## Application architecture
+
+```text
+Browser
+   ↓
+Nginx frontend container
+   ├── React static files
+   └── /api/* reverse proxy
+          ↓
+Spring Boot backend container
+          ↓
+PostgreSQL database container
+          ↓
+Persistent Docker volume
+```
+
+The browser uses same-origin `/api/...` requests. Nginx forwards those requests to the internal `backend` service, so the backend and database do not need to be exposed directly to the host.
+
+## Project status
+
+The responsive UI is API-backed. The Compose stack has been built and exercised with PostgreSQL, the frontend production build passes, and the backend integration suite uses an isolated test database. Runtime checks cover authentication, CSRF, invoice snapshots, payment locking, persistence and responsive layouts. See [`docs/LEARNING-LOG.md`](docs/LEARNING-LOG.md) for the chronological record, [`docs/FILE-MAP.md`](docs/FILE-MAP.md) for the file inventory and [`docs/ACCEPTANCE-MATRIX.md`](docs/ACCEPTANCE-MATRIX.md) for verification evidence.
+
+Generated `node_modules/`, `dist/`, `.npm-cache/` and `target/` folders are excluded from Git and Docker build contexts. `ERP-Learning-Pack/` contains the learning workbook and is intentionally unchanged. Local `.env` files, generated output, logs, IDE files and export archives are excluded by the root `.gitignore`.
 
 ## Frontend
 
